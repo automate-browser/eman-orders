@@ -2,3 +2,7 @@ handover/
 .env
 .env.*
 node_modules/
+data.json
+starting-data*
+test/shots/
+*.log

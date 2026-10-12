@@ -1,0 +1,1274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f5c3f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Eman Orders">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<title>Eman Bakery Orders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout concept: sidebar app shell on desktop, icon rail on tablet, bottom tab bar on phone. Product picking by category chips and tap tiles with a live cart beside them. */
+:root{
+  --bg:#f3f6f4; --surface:#ffffff; --surface2:#ebf0ed; --ink:#14231c; --muted:#5a6d63; --line:#d9e2dd;
+  --brand:#0f5c3f; --brand-ink:#ffffff; --brand-soft:#dcefe6; --accent:#d99a12; --accent-soft:#fbf0d3;
+  --good:#1d8a52; --good-soft:#dcf1e5; --warn:#a86300; --warn-soft:#fbecd0; --bad:#bf3a2b; --bad-soft:#f9dfdb; --info:#2765a8; --info-soft:#dde9f6;
+  --shadow:0 1px 2px rgba(20,35,28,.06),0 6px 18px rgba(20,35,28,.06);
+  --f-ui:'Manrope',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-disp:'Bricolage Grotesque','Manrope',system-ui,sans-serif;
+  --tab-h:62px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0d1511; --surface:#151f1a; --surface2:#1c2923; --ink:#e7f0eb; --muted:#93a89d; --line:#293a31;
+  --brand:#46c18c; --brand-ink:#062016; --brand-soft:#17382a; --accent:#f0bd45; --accent-soft:#3a2f10;
+  --good:#4ccf8d; --good-soft:#163627; --warn:#f0b04a; --warn-soft:#3b2b0e; --bad:#f0786a; --bad-soft:#40201c; --info:#74a9e6; --info-soft:#18304a;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1511; --surface:#151f1a; --surface2:#1c2923; --ink:#e7f0eb; --muted:#93a89d; --line:#293a31;
+  --brand:#46c18c; --brand-ink:#062016; --brand-soft:#17382a; --accent:#f0bd45; --accent-soft:#3a2f10;
+  --good:#4ccf8d; --good-soft:#163627; --warn:#f0b04a; --warn-soft:#3b2b0e; --bad:#f0786a; --bad-soft:#40201c; --info:#74a9e6; --info-soft:#18304a;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 6px 18px rgba(0,0,0,.35); color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-ui);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent;overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:var(--ink)}
+h1,h2,h3{font-family:var(--f-disp);margin:0;letter-spacing:-.01em;text-wrap:balance}
+.num{font-variant-numeric:tabular-nums}
+.ic{flex:none;vertical-align:middle}
+#app{height:100%}
+.shell{height:100%;display:grid;grid-template-columns:236px minmax(0,1fr);grid-template-rows:100%}
+.side{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px 12px;gap:6px;min-height:0;overflow:auto}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 14px}
+.brand .logo{width:38px;height:38px;border-radius:11px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-family:var(--f-disp);font-weight:700;font-size:20px}
+.brand b{font-family:var(--f-disp);font-size:17px;display:block;line-height:1.1}
+.brand small{color:var(--muted);font-size:12px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{display:flex;align-items:center;gap:12px;border:0;background:none;padding:10px 12px;border-radius:10px;color:var(--muted);font-weight:600;text-align:left;position:relative;min-height:44px}
+.nav button:hover{background:var(--surface2);color:var(--ink)}
+.nav button.on{background:var(--brand-soft);color:var(--brand)}
+.nav button[disabled]{opacity:.35;cursor:not-allowed}
+.nav .bdg{margin-left:auto}
+.nav-sep{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:12px 12px 4px}
+.who{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--line);border-radius:12px}
+.av{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--warn);display:grid;place-items:center;font-weight:800;flex:none}
+.who div{min-width:0}.who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.who small{color:var(--muted)}
+.main{display:flex;flex-direction:column;min-width:0;min-height:0}
+.top{display:flex;align-items:center;gap:10px;padding:12px 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.top h1{font-size:21px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{position:relative;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center}
+.iconbtn:hover{background:var(--surface2)}
+.bdg{background:var(--bad);color:#fff;border-radius:999px;font-size:11px;font-weight:800;min-width:19px;height:19px;padding:0 5px;display:inline-grid;place-items:center}
+.iconbtn .bdg{position:absolute;top:-6px;right:-6px}
+.content{flex:1;min-height:0;overflow:auto;padding:22px 24px 90px;scroll-behavior:auto}
+.page{max-width:1280px;margin:0 auto}
+.banner{display:flex;gap:12px;align-items:center;background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad);border-radius:12px;padding:12px 14px;margin-bottom:16px;font-weight:700}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);background:var(--surface);padding:10px 16px;border-radius:11px;font-weight:700;min-height:44px}
+.btn:hover{background:var(--surface2)}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.bad{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.btn.sm{min-height:36px;padding:6px 12px;font-size:13px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+.card h3{font-size:17px;margin-bottom:12px}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))}
+.stat{display:flex;flex-direction:column;gap:4px}
+.stat small{color:var(--muted);font-weight:700;font-size:12px;letter-spacing:.04em;text-transform:uppercase}
+.stat b{font-family:var(--f-disp);font-size:28px;line-height:1.1}
+.stat span{color:var(--muted);font-size:13px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:800;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}.pill.warn{background:var(--warn-soft);color:var(--warn)}.pill.bad{background:var(--bad-soft);color:var(--bad)}.pill.info{background:var(--info-soft);color:var(--info)}.pill.brand{background:var(--brand-soft);color:var(--brand)}
+.muted{color:var(--muted)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.row.sp{justify-content:space-between}
+.stack{display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field label{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.inp{border:1px solid var(--line);background:var(--surface);border-radius:11px;padding:11px 13px;min-height:44px;width:100%;min-width:0}
+.inp:focus,.btn:focus-visible,button:focus-visible,.pt:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.search{position:relative}.search .ic{position:absolute;left:12px;top:12px;color:var(--muted)}.search .inp{padding-left:40px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:thin}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:9px 15px;font-weight:700;font-size:14px;min-height:42px;display:inline-flex;gap:8px;align-items:center}
+.chip small{color:var(--muted);font-weight:700}
+.chip.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}.chip.on small{color:inherit;opacity:.8}
+.big{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:14px}
+.bigopt{border:2px solid var(--line);background:var(--surface);border-radius:18px;padding:26px 20px;text-align:left;display:flex;flex-direction:column;gap:6px;min-height:130px}
+.bigopt:hover{border-color:var(--brand)}.bigopt.on{border-color:var(--brand);background:var(--brand-soft)}
+.bigopt b{font-family:var(--f-disp);font-size:22px}.bigopt span{color:var(--muted)}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.stp{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:700;font-size:13px;color:var(--muted)}
+.stp.on{background:var(--brand-soft);border-color:var(--brand);color:var(--brand)}.stp.done{color:var(--ink)}
+.stp i{font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;font-size:11px}
+.stp.on i{background:var(--brand);color:var(--brand-ink)}.stp.done i{background:var(--good);color:#fff}
+.list{display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:12px;padding:12px 6px;border-bottom:1px solid var(--line);background:none;border-left:0;border-right:0;border-top:0;text-align:left;width:100%;min-height:56px}
+.li:last-child{border-bottom:0}.li:hover{background:var(--surface2)}
+.li .grow{flex:1;min-width:0}.li b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.li small{color:var(--muted)}
+.pick{display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:18px;align-items:start}
+.prods{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
+.pt{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:13px;display:flex;flex-direction:column;gap:6px;min-height:142px;text-align:left;cursor:pointer;position:relative;user-select:none}
+.pt:hover{border-color:color-mix(in srgb,var(--brand) 55%,var(--line))}
+.pt.on{border-color:var(--brand);background:var(--brand-soft)}
+.pt-name{font-weight:800;line-height:1.2;font-size:14.5px}
+.pt-meta{color:var(--muted);font-size:12.5px}
+.pt-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.price{font-family:var(--f-disp);font-weight:700;font-size:18px}
+.tagc{font-size:10.5px;font-weight:800;background:var(--accent-soft);color:var(--warn);border-radius:6px;padding:2px 6px;letter-spacing:.03em;text-transform:uppercase}
+.stepper{display:flex;align-items:center;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.stepper button{flex:0 0 40px;width:40px;height:40px;border:0;background:var(--surface2);display:grid;place-items:center}
+.stepper button:hover{background:var(--brand-soft)}
+.stepper input{width:46px;flex:1 1 46px;min-width:0;max-width:none;padding:0;margin:0;height:40px;border:0;border-radius:0;box-shadow:none;text-align:center;font-weight:800;background:transparent;-moz-appearance:textfield}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none}
+.cart{position:sticky;top:0;max-height:calc(100vh - 150px);display:flex;flex-direction:column}
+.cart .lines{overflow:auto;display:flex;flex-direction:column;min-height:60px}
+.cl{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.cl b{font-size:14px;line-height:1.2}.cl small{color:var(--muted)}
+.tot{display:grid;gap:6px;padding-top:12px;margin-top:6px;border-top:2px solid var(--ink)}
+.tot div{display:flex;justify-content:space-between}.tot .grand{font-family:var(--f-disp);font-size:24px;font-weight:700}
+.cartbar{display:none}
+.keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:340px}
+.keypad button{height:62px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-size:24px;font-weight:700;font-family:var(--f-disp)}
+.keypad button:hover{background:var(--surface2)}
+.kdisp{font-family:var(--f-disp);font-size:68px;font-weight:700;line-height:1;text-align:center;padding:16px;border:2px solid var(--brand);border-radius:18px;background:var(--surface);max-width:340px}
+.tbl{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--surface2);position:sticky;top:0;white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:16px;overflow-x:auto}
+.tab{border:0;background:none;padding:11px 16px;font-weight:700;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap;min-height:44px}
+.tab.on{color:var(--brand);border-bottom-color:var(--brand)}
+.sw{position:relative;width:46px;height:26px;flex:none}
+.sw input{position:absolute;inset:0;opacity:0;cursor:pointer;margin:0;z-index:1}
+.sw i{position:absolute;inset:0;border-radius:99px;background:var(--line);transition:.15s}
+.sw i::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.sw input:checked+i{background:var(--brand)}.sw input:checked+i::after{left:23px}
+.sw input:focus-visible+i{outline:2px solid var(--brand);outline-offset:2px}
+.ftog{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line)}
+.ftog small{color:var(--muted);display:block}
+.mask{position:fixed;inset:0;background:rgba(6,12,9,.55);z-index:40;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--surface);border-radius:20px;width:min(560px,100%);max-height:calc(100% - 8px);overflow:auto;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.modal.wide{width:min(760px,100%)}
+.modal h2{font-size:22px;margin-bottom:14px}
+.sheet{align-items:flex-end;padding:0}.sheet .modal{border-radius:22px 22px 0 0;width:100%;max-height:85%;padding-bottom:calc(22px + env(safe-area-inset-bottom,0px))}
+.pop{position:fixed;top:64px;right:16px;width:min(380px,calc(100% - 32px));z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.28);padding:14px;max-height:70%;overflow:auto}
+.toast{position:fixed;left:50%;bottom:calc(var(--tab-h) + 24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-weight:700;z-index:60;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
+.demo{position:fixed;right:12px;bottom:12px;z-index:35;background:var(--surface);border:1px dashed var(--accent);border-radius:12px;padding:8px 10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:12px;max-width:calc(100% - 24px);box-shadow:var(--shadow)}
+.flip svg{transform:rotate(180deg)}
+.payl{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface);flex-wrap:wrap}
+.payl .inp{width:130px;text-align:right}
+.pstat{padding:11px 14px;border-radius:12px;font-weight:800;background:var(--surface2);color:var(--muted)}
+.pstat.ok{background:var(--good-soft);color:var(--good)}.pstat.bad{background:var(--warn-soft);color:var(--warn)}
+.hint{font-size:13.5px;font-weight:700;color:var(--info);background:var(--info-soft);border-radius:10px;padding:8px 12px}
+#printarea{display:none}
+.rcwrap{background:#e9e6df;border-radius:12px;padding:14px;max-height:52vh;overflow:auto;display:flex;justify-content:center}
+.rcpt{width:72mm;max-width:100%;background:#fff;color:#000;padding:4mm 3mm;font:12px/1.4 "Courier New",ui-monospace,monospace;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.rcpt .c{text-align:center}.rcpt .big{font-size:17px;font-weight:700}.rcpt .hr{border-top:1px dashed #000;margin:5px 0}
+.rcpt .r2{display:flex;justify-content:space-between;gap:6px}.rcpt .it{margin:3px 0}.rcpt .tt{font-size:16px;font-weight:700}
+.rcpt .ar{direction:rtl;font-family:"Segoe UI",Tahoma,sans-serif;font-size:14px}
+@media print{html,body{background:#fff!important}#app,#layer,.demo,.demopill{display:none!important}#printarea{display:block!important}}
+.dst{background:#fff;color:#000;font:12px/1.45 Inter,Arial,sans-serif;padding:0}
+.dst h1{font:700 20px/1.2 Arial,sans-serif;margin:0}.dst .ar{direction:rtl;font-size:15px}
+.dst .hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #000;padding-bottom:8px;margin-bottom:10px}
+.dst .ttl{background:#000;color:#fff;padding:7px 10px;font-weight:700;letter-spacing:.04em;display:flex;justify-content:space-between;margin-bottom:10px}
+.dst table{width:100%;border-collapse:collapse;margin:6px 0 12px}.dst th,.dst td{border:1px solid #000;padding:4px 7px;text-align:left}.dst th{background:#eee}.dst .n{text-align:right;font-variant-numeric:tabular-nums}
+.dst h3{margin:12px 0 4px;font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+.dst .box{border:2px solid #000;padding:8px 10px;margin-top:10px}.dst .box .r{display:flex;justify-content:space-between;padding:2px 0}.dst .box .gt{border-top:2px solid #000;margin-top:4px;padding-top:6px;font-size:16px;font-weight:700}
+.dst .note{font-size:11px;color:#333;margin-top:8px}
+.dst.slip{width:72mm;font:11px/1.35 "Courier New",monospace;margin:0 auto}.dst.slip .hd{display:block;text-align:center}.dst.slip .px,.dst.slip .nos{display:none}.dst.slip th,.dst.slip td{padding:2px 3px}.dst.slip .ttl{display:block;text-align:center}
+.dsview{background:#e9e6df;border-radius:12px;padding:12px;max-height:56vh;overflow:auto}.dsview .dst{margin:0 auto;box-shadow:0 2px 10px rgba(0,0,0,.18);padding:12px;max-width:760px}.dsview .dst.slip{padding:8px}
+.pgbrk{page-break-after:always;break-after:page}
+.demopill{position:fixed;right:10px;top:64px;z-index:35;border:1px dashed var(--accent);background:var(--surface);color:var(--warn);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:800;box-shadow:var(--shadow)}
+.demo b{color:var(--warn)}
+.demo button{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700}
+.tabbar{display:none}
+.landing{min-height:100%;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);overflow:auto;height:100%}
+.hero{background:var(--brand);color:var(--brand-ink);padding:56px;display:flex;flex-direction:column;justify-content:center;gap:22px}
+.hero h1{font-size:clamp(34px,4.4vw,58px);line-height:1.02}
+.hero p{max-width:46ch;opacity:.92;font-size:17px}
+.hero ul{margin:0;padding:0;list-style:none;display:grid;gap:10px;font-weight:600}
+.hero li{display:flex;gap:10px;align-items:center}
+.login{display:flex;align-items:center;justify-content:center;padding:32px}
+.login .card{width:min(420px,100%)}
+.progress{display:grid;gap:10px;margin:8px 0 4px}
+.progress div{display:flex;gap:10px;align-items:center;color:var(--muted);font-weight:600}
+.progress div.done{color:var(--good)}.progress div.act{color:var(--ink)}
+.spin{width:16px;height:16px;border:2px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.cd{font-variant-numeric:tabular-nums;font-weight:800}
+.cd.warn{color:var(--warn)}.cd.bad{color:var(--bad)}
+.empty{padding:34px 12px;text-align:center;color:var(--muted)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px}.kv dt{color:var(--muted)}.kv dd{margin:0;font-weight:700;text-align:right}
+
+/* ===== visual refresh ===== */
+:root{--r:18px;--ring:color-mix(in srgb,var(--brand) 22%,transparent);--shadow:0 1px 2px rgba(15,40,30,.05),0 8px 24px rgba(15,40,30,.07);--shadow2:0 2px 4px rgba(15,40,30,.06),0 16px 40px rgba(15,40,30,.12)}
+body{background:radial-gradient(900px 420px at 100% -8%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 70%),radial-gradient(700px 400px at -10% 110%,color-mix(in srgb,var(--brand) 10%,transparent),transparent 70%),var(--bg)}
+.side{background:linear-gradient(180deg,#0f4a34 0%,#0a3326 60%,#072419 100%);border-right:0;color:#d4eadf}
+.brand .logo{background:linear-gradient(135deg,#f3c35a,#d99a12);color:#3a2700;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.brand b{color:#fff}.brand small{color:#9fc4b2}
+.nav button{color:#b7d3c5;border-radius:12px;transition:background .15s,color .15s}
+.nav button:hover{background:rgba(255,255,255,.09);color:#fff}
+.nav button.on{background:rgba(255,255,255,.15);color:#fff;box-shadow:inset 3px 0 0 #f3c35a}
+.who{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff}.who small{color:#9fc4b2}
+.top{background:color-mix(in srgb,var(--surface) 84%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent)}
+.iconbtn{border-radius:13px;transition:transform .12s,background .12s}.iconbtn:active{transform:scale(.94)}
+.card{border-radius:var(--r);border:1px solid color-mix(in srgb,var(--line) 75%,transparent);box-shadow:var(--shadow)}
+.btn{border-radius:12px;transition:transform .1s,filter .15s,background .15s,box-shadow .15s}.btn:active{transform:scale(.975)}
+.btn.pri{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 86%,#fff),var(--brand));box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 6px 16px color-mix(in srgb,var(--brand) 32%,transparent)}
+.inp{border-radius:12px;transition:border-color .15s,box-shadow .15s;background:color-mix(in srgb,var(--surface) 92%,var(--surface2))}
+.inp:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px var(--ring);background:var(--surface)}
+.field label{font-size:11.5px;letter-spacing:.07em}
+.chips{flex-wrap:wrap;overflow:visible;gap:6px;padding:0}
+.chip{min-height:36px;padding:6px 13px;font-size:13.5px;transition:transform .1s,background .15s,border-color .15s}.chip:active{transform:scale(.96)}
+.chip:hover{border-color:var(--brand)}
+.chip.on{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 86%,#fff),var(--brand));box-shadow:0 4px 12px color-mix(in srgb,var(--brand) 30%,transparent)}
+.tabs{display:inline-flex;max-width:100%;background:var(--surface2);padding:4px;border-radius:14px;border-bottom:0;gap:2px;margin-bottom:18px}
+.tab{border-radius:10px;border-bottom:0;padding:7px 15px;min-height:38px;transition:background .15s}
+.tab.on{background:var(--surface);color:var(--brand);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.tbl{border-radius:16px;box-shadow:var(--shadow);border-color:color-mix(in srgb,var(--line) 75%,transparent)}
+th{background:color-mix(in srgb,var(--surface2) 70%,var(--surface))}
+tbody tr{transition:background .12s}tbody tr:hover td{background:color-mix(in srgb,var(--brand) 5%,transparent)}
+.li{border-radius:0;transition:background .12s}
+.stat{position:relative;overflow:hidden}
+.stat .si{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand);margin-bottom:6px}
+.stat:nth-child(2) .si{background:var(--accent-soft);color:var(--warn)}.stat:nth-child(3) .si{background:var(--info-soft);color:var(--info)}.stat:nth-child(4) .si{background:var(--good-soft);color:var(--good)}
+.stat b{font-size:30px}
+.greet{position:relative;overflow:hidden;border-radius:22px;padding:26px 28px;color:#fff;background:linear-gradient(120deg,#0f5c3f,#0b3f2c 70%);box-shadow:var(--shadow2)}
+.greet::before,.greet::after{content:"";position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(243,195,90,.35),transparent 70%)}
+.greet::before{width:260px;height:260px;right:-60px;top:-110px}.greet::after{width:180px;height:180px;right:140px;bottom:-110px;opacity:.6}
+.greet h2{font-size:clamp(24px,3vw,32px);position:relative}.greet p{margin:6px 0 0;opacity:.85;position:relative}
+.bigopt{border-radius:20px;transition:transform .15s,box-shadow .15s,border-color .15s;background:linear-gradient(160deg,var(--surface),color-mix(in srgb,var(--brand-soft) 55%,var(--surface)))}
+.bigopt:hover{transform:translateY(-2px);box-shadow:var(--shadow2)}.bigopt .ic{color:var(--brand)}
+.stp{transition:background .15s}
+.mask{backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);background:rgba(6,18,12,.5)}
+.modal{border-radius:24px;box-shadow:var(--shadow2)}
+.pop{border-radius:18px;box-shadow:var(--shadow2)}
+.toast{border-radius:14px;box-shadow:var(--shadow2);padding:12px 20px}
+.pill{font-weight:700}
+.keypad button{border-radius:16px;box-shadow:0 1px 2px rgba(0,0,0,.05);transition:transform .08s,background .12s}.keypad button:active{transform:scale(.95);background:var(--brand-soft)}
+.kdisp{border-radius:20px;box-shadow:0 0 0 5px var(--ring)}
+/* picker */
+.pk{display:flex;flex-direction:column;gap:12px}
+.pkh{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.pkh i{font-style:normal;width:20px;height:20px;border-radius:50%;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-size:11px}
+.catgrid{display:flex;flex-wrap:wrap;gap:6px}
+.catgrid .chip{min-height:34px;padding:5px 11px;font-size:12.5px;font-weight:700;line-height:1.15}
+.catgrid .chip b{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:var(--accent);color:#3a2700;font-size:11px;padding:0 5px}
+.pcsrow{display:flex;flex-wrap:wrap;gap:8px}
+.pcsb{border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:6px 14px;min-width:68px;display:flex;flex-direction:column;align-items:center;line-height:1.1;transition:transform .1s,border-color .15s,background .15s}
+.pcsb b{font-family:var(--f-disp);font-size:22px}.pcsb small{color:var(--muted);font-size:11px;font-weight:700}
+.pcsb:hover{border-color:var(--brand)}.pcsb:active{transform:scale(.96)}
+.pcsb.on{background:linear-gradient(180deg,color-mix(in srgb,var(--brand) 86%,#fff),var(--brand));border-color:var(--brand);color:var(--brand-ink);box-shadow:0 6px 14px color-mix(in srgb,var(--brand) 30%,transparent)}.pcsb.on small{color:inherit;opacity:.85}
+.pt{border-radius:18px;border-width:1.5px;transition:transform .12s,border-color .15s,box-shadow .15s;box-shadow:0 1px 2px rgba(15,40,30,.04)}
+.pt:hover{transform:translateY(-2px);box-shadow:var(--shadow)}.pt:active{transform:scale(.985)}
+.pt::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:4px;border-radius:0 4px 4px 0;background:var(--accent)}
+.pt.on::before{background:var(--brand)}
+.pt-name{padding-left:4px}
+.pt-meta{padding-left:4px}.pt-foot{padding-left:4px}
+.ghost{border:2px dashed var(--line);border-radius:18px;padding:34px 18px;text-align:center;color:var(--muted)}
+.ghost b{display:block;font-family:var(--f-disp);font-size:18px;color:var(--ink);margin-bottom:4px}
+/* landing */
+.lp{height:100%;overflow:auto;background:var(--bg);scroll-behavior:smooth}
+.lpn{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:20px;padding:12px max(20px,calc((100% - 1160px)/2));background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid color-mix(in srgb,var(--line) 60%,transparent)}
+.lpn .brand{padding:0}.lpn .brand b{color:var(--ink)}.lpn .brand small{color:var(--muted)}
+.lpn nav{margin-left:auto;display:flex;gap:6px;align-items:center}.lpn nav a{padding:8px 12px;border-radius:10px;font-weight:700;color:var(--muted);text-decoration:none}.lpn nav a:hover{background:var(--surface2);color:var(--ink)}
+.lpw{max-width:1160px;margin:0 auto;padding:0 20px}
+.lph{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:40px;align-items:center;padding:56px 0 40px}
+.lph .tag{display:inline-flex;gap:8px;align-items:center;background:var(--accent-soft);color:var(--warn);font-weight:800;font-size:12.5px;padding:6px 12px;border-radius:99px;letter-spacing:.03em}
+.lph h1{font-size:clamp(38px,5.2vw,68px);line-height:1;margin:16px 0 16px}
+.lph h1 em{font-style:normal;background:linear-gradient(120deg,#0f5c3f,#2da36f);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lph p.lead{font-size:18px;color:var(--muted);max-width:52ch;margin:0 0 24px}
+.lph .cta{display:flex;gap:12px;flex-wrap:wrap}.lph .cta .btn{min-height:52px;padding:12px 24px;font-size:16px}
+.lph .trust{display:flex;gap:18px;flex-wrap:wrap;margin-top:22px;color:var(--muted);font-weight:700;font-size:13.5px}.lph .trust span{display:flex;gap:6px;align-items:center}.lph .trust .ic{color:var(--good)}
+.dev{position:relative;justify-self:center;width:min(380px,100%)}
+.dev .glow{position:absolute;inset:-30px;background:radial-gradient(circle at 60% 40%,rgba(243,195,90,.45),transparent 62%),radial-gradient(circle at 20% 80%,rgba(15,92,63,.28),transparent 60%);filter:blur(10px);z-index:0}
+.phone{position:relative;z-index:1;background:#0b1712;border-radius:38px;padding:11px;box-shadow:0 30px 70px rgba(10,40,28,.35)}
+.phone .scr{background:var(--bg);border-radius:29px;padding:16px 14px;height:500px;overflow:hidden;position:relative}
+.phone .hdr{display:flex;justify-content:space-between;align-items:center;font-family:var(--f-disp);font-weight:700;font-size:17px;margin-bottom:10px}
+.mchips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}.mchips i{font-style:normal;font-size:10.5px;font-weight:800;padding:4px 9px;border-radius:99px;background:var(--surface);border:1px solid var(--line)}.mchips i.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.mtiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.mt{background:var(--surface);border:1.5px solid var(--line);border-radius:14px;padding:9px;font-size:11px;font-weight:800;position:relative}.mt small{display:block;color:var(--muted);font-weight:700}.mt b{font-family:var(--f-disp);font-size:15px}
+.mt.on{border-color:var(--brand);background:var(--brand-soft)}
+.mcart{background:var(--surface);border-radius:16px;padding:10px 12px;box-shadow:var(--shadow);font-size:12px}
+.mcart .ln{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line);opacity:0;animation:lnin .5s forwards}
+.mcart .ln:nth-child(2){animation-delay:.6s}.mcart .ln:nth-child(3){animation-delay:1.4s}.mcart .ln:nth-child(4){animation-delay:2.2s}
+.mcart .tt{display:flex;justify-content:space-between;font-family:var(--f-disp);font-weight:700;font-size:17px;padding-top:8px}
+@keyframes lnin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.mbtn{margin-top:10px;background:linear-gradient(180deg,#1c7a56,#0f5c3f);color:#fff;text-align:center;padding:11px;border-radius:13px;font-weight:800;font-size:13px;animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(15,92,63,.4)}50%{box-shadow:0 0 0 9px rgba(15,92,63,0)}}
+.float{position:absolute;z-index:2;animation:bob 5s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(var(--rot,0deg))}50%{transform:translateY(-12px) rotate(calc(var(--rot,0deg) + 4deg))}}
+.lpb{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border-radius:22px;overflow:hidden;margin:10px 0 56px;box-shadow:var(--shadow)}
+.lpb div{background:var(--surface);padding:22px;text-align:center}.lpb b{display:block;font-family:var(--f-disp);font-size:34px;color:var(--brand)}.lpb span{color:var(--muted);font-weight:700;font-size:13.5px}
+.lps{padding:30px 0 40px}.lps h2{font-size:clamp(28px,3.4vw,40px);text-align:center;margin-bottom:8px}.lps .sub{text-align:center;color:var(--muted);max-width:60ch;margin:0 auto 30px}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:16px}
+.fc{background:var(--surface);border:1px solid color-mix(in srgb,var(--line) 75%,transparent);border-radius:20px;padding:22px;box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s}
+.fc:hover{transform:translateY(-3px);box-shadow:var(--shadow2)}
+.fc .fi{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;margin-bottom:14px;background:var(--brand-soft);color:var(--brand)}
+.fc:nth-child(3n+2) .fi{background:var(--accent-soft);color:var(--warn)}.fc:nth-child(3n) .fi{background:var(--info-soft);color:var(--info)}
+.fc h3{font-size:18px;margin-bottom:6px}.fc p{margin:0;color:var(--muted);font-size:14.5px}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:14px;counter-reset:s}
+.fl{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 20px 20px}
+.fl::before{counter-increment:s;content:counter(s);position:absolute;top:-14px;left:18px;width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;display:grid;place-items:center;font-weight:800;box-shadow:0 4px 10px rgba(15,92,63,.4)}
+.fl b{font-family:var(--f-disp);font-size:17px;display:block;margin-bottom:4px}.fl span{color:var(--muted);font-size:14px}
+.lpc{margin:20px 0 40px;border-radius:28px;padding:46px 28px;text-align:center;color:#fff;background:linear-gradient(120deg,#0f5c3f,#093626);position:relative;overflow:hidden;box-shadow:var(--shadow2)}
+.lpc h2{font-size:clamp(26px,3.4vw,38px);margin-bottom:8px}.lpc p{opacity:.85;margin:0 0 22px}
+.lpc .btn.pri{background:linear-gradient(180deg,#f6cf6f,#e0a21d);color:#3a2700;border:0;min-height:52px;padding:12px 28px;font-size:16px}
+.lpf{padding:20px 0 40px;text-align:center;color:var(--muted);font-size:13.5px}
+/* login */
+.auth{height:100%;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);overflow:auto;background:var(--bg)}
+.scene{position:relative;overflow:hidden;background:linear-gradient(170deg,#0e5a3e 0%,#083b2a 55%,#05261b 100%);min-height:100%}
+.scene svg.art{position:absolute;inset:0;width:100%;height:100%}
+.scene .cap{position:absolute;left:44px;right:44px;top:92px;color:#fff;z-index:3;text-shadow:0 2px 14px rgba(0,0,0,.35)}
+.scene .cap h2{font-size:clamp(28px,3.4vw,44px);line-height:1.05;margin-bottom:10px}.scene .cap p{opacity:.85;max-width:40ch;margin:0}
+.scene .bk{position:absolute;left:28px;top:24px;z-index:3;display:flex;align-items:center;gap:10px;color:#fff;font-weight:800;border:0;background:rgba(255,255,255,.12);padding:8px 14px;border-radius:99px;backdrop-filter:blur(6px)}
+.authf{display:flex;align-items:center;justify-content:center;padding:32px 24px}
+.authf .box{width:min(420px,100%);display:flex;flex-direction:column;gap:18px}
+.authf h2{font-size:34px}.authf .inw{position:relative}.authf .inw .ic{position:absolute;left:13px;top:13px;color:var(--muted)}.authf .inw .inp{padding-left:42px}
+.authf .inw .eye{position:absolute;right:6px;top:4px;border:0;background:none;width:38px;height:36px;color:var(--muted);display:grid;place-items:center}
+.authf .brand b,.lpn .brand b{display:block!important;color:var(--ink)}.authf .brand small,.lpn .brand small{display:block!important}.authf .brand b{color:var(--ink)}.authf .brand small{color:var(--muted)}a.btn{color:var(--ink);text-decoration:none}
+.authf .btn.pri{min-height:50px;font-size:16px}
+.demoacc{border:1px dashed var(--line);border-radius:16px;padding:12px 14px}.demoacc small{display:block;color:var(--muted);font-weight:700;margin-bottom:8px}
+.steam{transform-box:fill-box;transform-origin:50% 100%;animation:steam 4.5s ease-in infinite;opacity:0}
+.steam.s2{animation-delay:1.5s}.steam.s3{animation-delay:3s}
+@keyframes steam{0%{transform:translateY(20px) scaleX(.8);opacity:0}25%{opacity:.55}100%{transform:translateY(-110px) scaleX(1.5);opacity:0}}
+.flick{transform-box:fill-box;transform-origin:50% 100%;animation:flick 1.6s ease-in-out infinite alternate}
+@keyframes flick{from{opacity:.78;transform:scale(.97)}to{opacity:1;transform:scale(1.03)}}
+.loaf{transform-box:fill-box;transform-origin:50% 50%;animation:bob 6s ease-in-out infinite}
+.loaf.l2{animation-delay:-2s}.loaf.l3{animation-delay:-4s}.loaf.l4{animation-delay:-1s}
+.sway{transform-box:fill-box;transform-origin:50% 100%;animation:sway 5s ease-in-out infinite alternate}
+.sway.w2{animation-delay:-1.2s}.sway.w3{animation-delay:-2.4s}.sway.w4{animation-delay:-3.6s}
+@keyframes sway{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+.spark{animation:tw 3s ease-in-out infinite}.spark.k2{animation-delay:-1s}.spark.k3{animation-delay:-2s}
+@keyframes tw{0%,100%{opacity:.15}50%{opacity:.9}}
+@media (max-width:900px){.lph{grid-template-columns:minmax(0,1fr);padding-top:30px}.dev{margin-top:10px}.lpb{grid-template-columns:repeat(2,1fr)}.lpn nav a{display:none}
+ .auth{grid-template-columns:minmax(0,1fr);grid-template-rows:200px auto}.scene{min-height:0}.scene .cap{display:none}.scene .bk{left:14px;top:12px}.authf{padding:22px 16px 40px;align-items:flex-start}}
+
+@media (max-width:1100px){
+  .shell{grid-template-columns:72px minmax(0,1fr)}
+  .side{padding:12px 8px;align-items:center}
+  .brand b,.brand small,.nav button span.lb,.who div,.nav-sep{display:none}
+  .brand{padding:4px 0 10px}.nav button{justify-content:center;padding:10px;width:52px}.nav .bdg{position:absolute;top:2px;right:2px;margin:0}
+  .who{padding:6px;border:0}
+  .pick{grid-template-columns:minmax(0,1fr)}
+  .cart.desk{display:none}
+  .cartbar{display:flex;position:fixed;left:16px;right:16px;bottom:16px;z-index:25;background:var(--brand);color:var(--brand-ink);border:0;border-radius:16px;padding:14px 18px;align-items:center;justify-content:space-between;font-weight:800;box-shadow:var(--shadow);min-height:56px}
+  .landing{grid-template-columns:minmax(0,1fr)}.hero{padding:34px 24px}
+}
+@media (max-width:760px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .side{display:none}
+  .top{padding:10px 16px}.top h1{font-size:19px}
+  .content{padding:16px 16px calc(var(--tab-h) + 96px)}
+  .tabbar{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;z-index:28;height:calc(var(--tab-h) + env(safe-area-inset-bottom,0px));padding-bottom:env(safe-area-inset-bottom,0px);background:var(--surface);border-top:1px solid var(--line)}
+  .tabbar button{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11px;font-weight:700;color:var(--muted);position:relative}
+  .tabbar button.on{color:var(--brand)}.tabbar button[disabled]{opacity:.35}
+  .tabbar .bdg{position:absolute;top:6px;left:calc(50% + 8px)}
+  .cartbar{bottom:calc(var(--tab-h) + 12px + env(safe-area-inset-bottom,0px))}
+  .prods{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .pt{padding:11px;min-height:134px}
+  .demo{bottom:calc(var(--tab-h) + 12px + env(safe-area-inset-bottom,0px))}
+  .kdisp{font-size:56px}
+  .catgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.catgrid .chip[data-act=catopen]{grid-column:1/-1}.catgrid .chip{justify-content:center;text-align:center;min-height:38px}
+  .hero{padding:26px 18px;gap:14px}.hero ul{display:none}.login{padding:18px 16px}
+  .pop{top:58px;right:8px}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="layer"></div>
+<div id="printarea"></div>
+<script>
+(function(){
+'use strict';
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const I={home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',wallet:'<path d="M3 7a2 2 0 0 1 2-2h13v4"/><path d="M3 7v11a2 2 0 0 0 2 2h14a1 1 0 0 0 1-1V9a1 1 0 0 0-1-1H5a2 2 0 0 1-2-1z"/><circle cx="16" cy="14" r="1.2"/>',receipt:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/>',tray:'<path d="M3 8l9-5 9 5-9 5z"/><path d="M3 12l9 5 9-5M3 16l9 5 9-5"/>',users:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.5 5.2"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c.7-4 3.6-6 8-6s7.3 2 8 6"/>',settings:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',bell:'<path d="M6 8a6 6 0 1 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 21a2 2 0 0 0 4 0"/>',search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',check:'<path d="M5 12.5l4.5 4.5L19 7"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',chev:'<path d="M9 5l7 7-7 7"/>',back:'<path d="M15 5l-7 7 7 7"/>',shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/>',list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',sync:'<path d="M21 12a9 9 0 0 1-15.5 6.2L3 16M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/>',logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',tag:'<path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="8" cy="8" r="1.2"/>',box:'<path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/>',more:'<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>',cart:'<circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.6 12.4a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 7H6"/>',theme:'<path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/>',credit:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>',key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/>'};
+const ic=(n,s=20)=>`<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[n]||''}</svg>`;
+const nf=new Intl.NumberFormat('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const nf0=new Intl.NumberFormat('en-US',{maximumFractionDigits:0});
+const sar=c=>'SAR '+nf.format(c/100);
+const sar0=r=>'SAR '+nf0.format(r);
+const pad=(n,l)=>String(n).padStart(l,'0');
+const FEATURES=[
+ ['order_create','Create and edit orders','Start orders and change them before they are finalized'],
+ ['order_finalize','Finalize orders','Posts the invoice to Odoo'],
+ ['order_cancel','Cancel pending orders','Only before finalizing'],
+ ['order_view','View order history','Finalized and cancelled orders'],
+ ['payments','Receive payments','Posts the payment to Odoo'],
+ ['credit_notes','Issue credit notes and discounts','Posts a credit note to Odoo'],
+ ['trays_view','View tray ledger','Balances and movements'],
+ ['daily_print','Print the combined day statement','Per customer, for any date'],
+ ['customers_view','View customers and prices','Read only'],
+ ['sync_view','View Odoo sync queue','Retry failed postings']
+];
+const ALLF=FEATURES.map(f=>f[0]);
+
+/* ---------- state (the server is the source of truth) ---------- */
+let S=null, PUB={products:0,customers:0,branches:['Hira Branch','Rahmaniyyah Branch'],finalizeMin:60};
+let UI={auth:'home',hist:[],pay:null,payAdd:false,view:'home',tab:{},q:{},draft:null,modal:null,pop:false,cartOpen:false,toast:null,more:false,sel:{},busy:false};
+let skew=0,lastSnap='';
+const now=()=>Date.now()+skew;
+function blank(){return {session:null,users:[],products:new Array(PUB.products).fill({active:true}),customers:new Array(PUB.customers).fill({active:true}),custom:{},orders:[],payments:[],credits:[],trays:[],audit:[],set:{branches:PUB.branches,finalizeMin:PUB.finalizeMin}}}
+async function api(method,url,body){
+  let r;
+  try{r=await fetch(url,{method,headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined,credentials:'same-origin'})}
+  catch(e){throw new Error('No connection to the server. Check the internet and try again.')}
+  let j=null;try{j=await r.json()}catch(e){}
+  if(r.status===401&&S&&S.session){S=blank();lastSnap='';UI.auth='login';UI.modal=null;render();throw new Error((j&&j.error)||'Please sign in.')}
+  if(!r.ok)throw new Error((j&&j.error)||('Server error '+r.status));
+  return j;
+}
+async function refresh(quiet){
+  const r=await fetch('/api/state',{credentials:'same-origin',cache:'no-store'});
+  if(r.status===401){S=blank();lastSnap='';return true}
+  if(!r.ok)throw new Error('state '+r.status);
+  const txt=await r.text();
+  const cmp=txt.replace(/"serverNow":\d+,?/,'');
+  if(quiet&&cmp===lastSnap)return false;
+  lastSnap=cmp;S=JSON.parse(txt);skew=S.serverNow-Date.now();return true;
+}
+// run a server action; errors become a message, then the screen is refreshed from the server
+async function act(fn,okMsg){
+  if(UI.busy)return false;UI.busy=true;
+  try{const r=await fn();await refresh();if(okMsg)toast(typeof okMsg==='function'?okMsg(r):okMsg);else render();return r===undefined?true:r}
+  catch(e){toast(e.message);return false}
+  finally{UI.busy=false}
+}
+function audit(action,entity,ref,detail){
+  fetch('/api/audit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,entity,ref,detail}),credentials:'same-origin'}).catch(()=>{});
+}
+const uById=id=>S.users.find(u=>u.id===id);
+const me=()=>S.session?uById(S.session):null;
+const can=f=>{const u=me();return !!u&&u.active&&(u.admin||u.feat.includes(f))};
+const cust=c=>S.customers.find(x=>x.code===c);
+const prod=c=>S.products.find(x=>x.code===c);
+function priceFor(cc,pc){const m=S.custom[cc];if(m&&m[pc]!=null)return {v:m[pc],custom:true};const p=prod(pc);return {v:p?p.dflt:0,custom:false}}
+const toC=v=>Math.round(v*100);
+function totals(lines,cc,fixed){
+  let sub=0;lines.forEach(l=>{const pr=fixed?l.price:priceFor(cc,l.code).v;sub+=toC(pr)*l.qty});
+  const rounded=Math.floor((sub+50)/100);
+  return {sub,rounded,diff:rounded*100-sub};
+}
+const held=cc=>S.trays.filter(t=>t.cust===cc).reduce((a,t)=>a+t.qty,0);
+const heldAll=()=>S.trays.filter(t=>t.cust).reduce((a,t)=>a+t.qty,0);
+const bstock=b=>S.trays.filter(r=>r.branch===b).reduce((a,r)=>a+(r.cust?-r.qty:r.qty),0);
+const stockAll=()=>S.set.branches.reduce((a,b)=>a+bstock(b),0);
+const openB=b=>S.trays.filter(r=>r.type==='bopen'&&r.branch===b).reduce((a,r)=>a+r.qty,0);
+const openC=c=>S.trays.filter(r=>r.type==='opening'&&r.cust===c).reduce((a,r)=>a+r.qty,0);
+function maxIn(){const d=UI.draft;const o=d.orderId&&S.orders.find(x=>x.id===d.orderId);return held(d.cust)+(o?o.traysIn:0)}
+function remaining(o){return o.status==='final'?o.rem:0}
+function balance(c){return toC(c.open)+S.orders.filter(o=>o.cust===c.code&&o.status==='final').reduce((a,o)=>a+o.rem,0)-toC(c.advance)}
+function deadline(t){
+  const lim=t+S.set.finalizeMin*60000;const d=new Date(t);d.setHours(23,59,59,0);return Math.min(lim,d.getTime());
+}
+const pending=()=>S.orders.filter(o=>o.status==='pending');
+const overdue=()=>pending().filter(o=>o.deadline<=now());
+const fmtT=t=>new Date(t).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+const fmtD=t=>new Date(t).toLocaleDateString([], {day:'2-digit',month:'short',year:'numeric'});
+const fmtDT=t=>fmtD(t)+' '+fmtT(t);
+function cdText(ms){if(ms<=0)return 'Overdue';const s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor(s%3600/60),ss=s%60;return (h?h+':'+pad(m,2):pad(m,2))+':'+pad(ss,2)}
+function cdClass(ms){return ms<=0?'bad':ms<600000?'warn':''}
+
+/* ---------- actions (all of them go to the server) ---------- */
+async function newOrder(d){
+  const r=await api('POST','/api/orders',{branch:d.branch,cust:d.cust,traysIn:d.traysIn,lines:d.lines.map(l=>({code:l.code,qty:l.qty}))});
+  await refresh();return r.id;
+}
+async function saveOrder(d){await api('PUT','/api/orders/'+d.orderId,{traysIn:d.traysIn,lines:d.lines.map(l=>({code:l.code,qty:l.qty}))});await refresh()}
+async function cancelOrder(id,reason){await api('POST','/api/orders/'+id+'/cancel',{reason});await refresh()}
+async function finalizeOrder(id,traysOut){
+  UI.modal={type:'progress',orderId:id,step:1,offline:S.set.offline};render();
+  const tm=setInterval(()=>{if(UI.modal&&UI.modal.type==='progress'&&UI.modal.step<3){UI.modal.step++;render()}},1100);
+  try{
+    const r=await api('POST','/api/orders/'+id+'/finalize',{traysOut});
+    clearInterval(tm);await refresh();
+    UI.modal={type:'done',orderId:id};render();
+  }catch(e){
+    clearInterval(tm);
+    try{await refresh()}catch(x){}
+    const o=S.orders.find(x=>x.id===id);
+    if(o&&o.status==='final'){UI.modal={type:'done',orderId:id};render();return} // the server finished although the answer was lost
+    UI.modal={type:'fin',id,tout:String(traysOut)};
+    render();toast(e.message);
+  }
+}
+async function retryQueue(failed){const r=await api('POST','/api/sync/retry',{failed:!!failed});return r}
+const queueMsg=r=>r.posted+' posted to Odoo'+(r.failed?', '+r.failed+' refused (see Detail)':'')+(r.stopped?'. Odoo is not reachable yet, items stay in the queue.':'');
+
+const NAV=[
+ ['home','Home','home',()=>true],
+ ['new','New order','plus',()=>can('order_create')],
+ ['pending','Pending','clock',()=>can('order_create')||can('order_finalize')],
+ ['orders','Orders','receipt',()=>can('order_view')],
+ ['daily','Day statement','receipt',()=>can('daily_print')],
+ ['payments','Payments','wallet',()=>can('payments')],
+ ['credit','Credit notes','credit',()=>can('credit_notes')],
+ ['trays','Trays','tray',()=>can('trays_view')],
+ ['customers','Customers','users',()=>can('customers_view')],
+ ['sync','Odoo sync','sync',()=>can('sync_view')],
+ ['admin','Admin console','shield',()=>me()&&me().admin]
+];
+const TITLES={home:'Home',new:'New order',pending:'Pending orders',orders:'Orders',payments:'Receive payment',credit:'Credit note',daily:'Combined day statement',trays:'Tray ledger',customers:'Customers',sync:'Odoo sync',admin:'Admin console'};
+function cdSpan(o){const ms=o.deadline-now();return `<span class="cd ${cdClass(ms)}" data-dl="${o.deadline}">${cdText(ms)}</span>`}
+function orderTotalTxt(o){const T=totals(o.lines,o.cust,true);return sar(T.rounded*100)}
+function lockBanner(){const n=overdue().length;return n?`<div class="banner">${ic('clock')}<div>${n} order${n>1?'s are':' is'} past the finalize time. Finalize ${n>1?'them':'it'} to continue. Everything else is locked.</div></div>`:''}
+
+function wheat(x,y,h,cls){
+  let g='';for(let i=0;i<6;i++){const yy=-h*0.35-i*h*0.1;g+=`<ellipse cx="-7" cy="${yy}" rx="3.2" ry="8" transform="rotate(-28 -7 ${yy})" fill="#f3c35a"/><ellipse cx="7" cy="${yy}" rx="3.2" ry="8" transform="rotate(28 7 ${yy})" fill="#e6ac33"/>`}
+  g+=`<ellipse cx="0" cy="${-h*0.98}" rx="3.2" ry="9" fill="#f3c35a"/>`;
+  return `<g transform="translate(${x} ${y})"><g class="sway ${cls}"><path d="M0 0 L0 ${-h}" stroke="#c9902a" stroke-width="2.4" stroke-linecap="round"/>${g}</g></g>`;
+}
+function loaf(x,y,s,cls,rot){return `<g transform="translate(${x} ${y}) scale(${s})"><g class="loaf ${cls}" style="--rot:${rot}deg"><ellipse cx="0" cy="0" rx="58" ry="30" fill="#c9822b"/><ellipse cx="0" cy="-4" rx="54" ry="25" fill="#e0a043"/><ellipse cx="-12" cy="-12" rx="30" ry="9" fill="#f1c274" opacity=".55"/><path d="M-30 -14 q8 -12 14 0 M-8 -18 q8 -12 14 0 M14 -14 q8 -12 14 0" stroke="#f9dea4" stroke-width="3.2" fill="none" stroke-linecap="round"/></g></g>`}
+function sceneSvg(){
+  return `<svg class="art" viewBox="0 0 600 920" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+  <defs><radialGradient id="gl" cx="50%" cy="60%" r="55%"><stop offset="0" stop-color="#ffb347" stop-opacity=".95"/><stop offset=".55" stop-color="#e8741f" stop-opacity=".55"/><stop offset="1" stop-color="#e8741f" stop-opacity="0"/></radialGradient>
+  <linearGradient id="br" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8a4a22"/><stop offset="1" stop-color="#5f3016"/></linearGradient></defs>
+  <g transform="translate(0 130)"><circle cx="470" cy="150" r="110" fill="#f3c35a" opacity=".08"/><circle cx="470" cy="150" r="60" fill="#f3c35a" opacity=".10"/>
+  ${[[80,120],[160,60],[300,90],[420,40],[540,230],[60,280],[520,330]].map((p,i)=>`<circle class="spark k${i%3+1}" cx="${p[0]}" cy="${p[1]}" r="2.4" fill="#ffe9b0"/>`).join('')}
+  <g transform="translate(300 430)"><path d="M-190 220 V-10 a190 190 0 0 1 380 0 V220 Z" fill="url(#br)"/><path d="M-190 220 V-10 a190 190 0 0 1 380 0 V220" fill="none" stroke="#3b1e0d" stroke-width="6"/>
+  <path d="M-120 220 V10 a120 120 0 0 1 240 0 V220 Z" fill="#2a1408"/><ellipse class="flick" cx="0" cy="150" rx="150" ry="120" fill="url(#gl)"/>
+  <path d="M-96 220 V20 a96 96 0 0 1 192 0 V220 Z" fill="#ff9a3c" opacity=".85" class="flick"/><path d="M-70 220 V30 a70 70 0 0 1 140 0 V220 Z" fill="#ffd27a" opacity=".9" class="flick"/>
+  <g class="flick"><path d="M-40 220 q-14 -50 4 -80 q6 24 18 8 q-4 40 8 72z" fill="#ff7a1f"/><path d="M12 220 q-10 -34 6 -58 q4 20 16 12 q-6 28 4 46z" fill="#ffb347"/></g>
+  <rect x="-210" y="212" width="420" height="22" rx="8" fill="#3b1e0d"/></g>
+  <g fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" opacity="0"><path class="steam" d="M260 330 q-18 -30 0 -60 q18 -30 0 -60"/><path class="steam s2" d="M300 320 q-18 -30 0 -60 q18 -30 0 -60"/><path class="steam s3" d="M340 330 q-18 -30 0 -60 q18 -30 0 -60"/></g>
+  <g fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"><path class="steam" d="M250 300 q-16 -28 0 -54 q16 -28 0 -54"/><path class="steam s2" d="M300 290 q-16 -28 0 -54 q16 -28 0 -54"/><path class="steam s3" d="M350 300 q-16 -28 0 -54 q16 -28 0 -54"/></g>
+  ${loaf(130,590,.9,'l1',-6)}${loaf(470,570,.8,'l2',8)}${loaf(300,640,1.05,'l3',0)}${loaf(95,510,.55,'l4',-14)}
+  ${wheat(40,800,230,'')}${wheat(100,800,170,'w2')}${wheat(520,800,250,'w3')}${wheat(570,800,180,'w4')}${wheat(470,800,150,'w2')}</g>
+  </svg>`;
+}
+function vLanding(){
+  if(UI.auth==='login')return vLogin();
+  const nProd=PUB.products,nCust=PUB.customers;
+  const F=[['tag','Category tap ordering','Pick a category, then the pieces per packet, then tap the product. A live cart shows every line while you work.'],['users','Customer prices, automatic','Every customer gets their own price from the price matrix. Products without a custom price use the default.'],['clock','One hour, never past midnight','Orders wait in the app and are finalized within the hour. Late orders lock the app until they are finalized.'],['sync','Posted to Odoo for you','Finalizing creates and posts the invoice. Payments and credit notes post on their own. Offline? They queue and retry.'],['tray','Tray ledger per branch','Trays brought and taken move stock between customers and the Hira and Rahmaniyyah branches. Nothing is edited, only added.'],['wallet','Split bank payments','One transfer, many customers. Divide it between them and every share posts to Odoo.'],['receipt','Combined day statement','All invoices of a day added together per customer, with credit notes and the balance as of that day.'],['shield','Users, access and audit log','Add users, choose what each can do, and see who did what and when.']];
+  return `<div class="lp"><header class="lpn"><div class="brand"><div class="logo">E</div><div><b>Eman Bakery</b><small>Orders, payments and trays</small></div></div><nav><a href="#feat">Features</a><a href="#flow">How it works</a><button class="btn pri" data-act="gologin">Sign in ${ic('chev',16)}</button></nav></header>
+  <div class="lpw"><section class="lph"><div><span class="tag">${ic('check',14)} Built for the Eman Bakery counter</span><h1>Orders at the <em>speed of the counter.</em></h1><p class="lead">Take the order, track the trays, finalize within the hour and let the invoice post to Odoo by itself. On a desktop, a tablet or a phone.</p>
+  <div class="cta"><button class="btn pri" data-act="gologin">Sign in ${ic('chev',18)}</button><a class="btn" href="#flow" style="text-decoration:none">See how it works</a></div>
+  <div class="trust"><span>${ic('check',16)} Installs like an app</span><span>${ic('check',16)} Works on any screen size</span><span>${ic('check',16)} Full audit trail</span></div></div>
+  <div class="dev"><div class="glow"></div><svg class="float" style="left:-34px;top:40px;--rot:-12deg" width="86" height="56" viewBox="-60 -34 120 68">${loaf(0,0,.75,'',0)}</svg><svg class="float" style="right:-30px;bottom:70px;--rot:10deg;animation-delay:-2s" width="96" height="60" viewBox="-60 -34 120 68">${loaf(0,0,.8,'',0)}</svg>
+  <div class="phone"><div class="scr"><div class="hdr"><span>New order</span><span class="pill brand">Hira Branch</span></div><div class="mchips"><i class="on">Chapathi</i><i>Shami White</i><i>Burger</i><i>Samouli</i><i>Muffin</i></div><div class="mchips"><i>10 pcs</i><i class="on">25 pcs</i><i>20 pcs</i></div>
+  <div class="mtiles"><div class="mt on">CHAPATHI 25<small>25 pcs</small><b>4.50</b></div><div class="mt">CHAPATHI 25 B<small>25 pcs</small><b>4.20</b></div></div>
+  <div class="mcart"><b>Order so far</b><div class="ln"><span>Chapathi 25 × 10</span><span>45.00</span></div><div class="ln"><span>Shami White 30 × 6</span><span>31.80</span></div><div class="ln"><span>Burger 10 × 4</span><span>8.00</span></div><div class="tt"><span>Total</span><span>SAR 85</span></div></div><div class="mbtn">Create order</div></div></div></div></section>
+  <div class="lpb"><div><b>${nProd}</b><span>Products</span></div><div><b>${nCust}</b><span>Customers</span></div><div><b>${S.set.branches.length}</b><span>Branches</span></div><div><b>${S.set.finalizeMin} min</b><span>To finalize an order</span></div></div>
+  <section class="lps" id="feat"><h2>Everything the counter needs</h2><p class="sub">Fewer taps for the team, clean records for the books.</p><div class="feat">${F.map(f=>`<div class="fc"><div class="fi">${ic(f[0],24)}</div><h3>${f[1]}</h3><p>${f[2]}</p></div>`).join('')}</div></section>
+  <section class="lps" id="flow"><h2>From customer to Odoo in four steps</h2><p class="sub">The same simple flow on every device.</p><div class="flow"><div class="fl"><b>Branch and customer</b><span>Choose the branch, then the customer.</span></div><div class="fl"><b>Trays brought</b><span>Enter the trays the customer brings back.</span></div><div class="fl"><b>Pick products</b><span>Category, pieces, tap. Change quantities in the cart.</span></div><div class="fl"><b>Finalize</b><span>Trays taken, invoice posted to Odoo, slip printed.</span></div></div></section>
+  <section class="lpc"><h2>Ready for today's orders?</h2><p>Sign in with your Eman Bakery account.</p><button class="btn pri" data-act="gologin">Sign in ${ic('chev',18)}</button></section>
+  <footer class="lpf">Eman Bakery, Jeddah · Internal order system · Not connected to ZATCA</footer></div></div>`;
+}
+function vLogin(){
+  return `<div class="auth"><section class="scene">${sceneSvg()}<button class="bk" data-act="gohome">${ic('back',16)} Home</button><div class="cap"><h2>Fresh from the oven.<br>Booked in minutes.</h2><p>Orders, trays and invoices for every Eman Bakery branch, in one place.</p></div></section>
+  <section class="authf"><form class="box" id="lf" autocomplete="off"><div class="brand" style="padding:0"><div class="logo">E</div><div><b>Eman Bakery</b><small>Orders, payments and trays</small></div></div>
+  <div><h2>Welcome back</h2><p class="muted" style="margin:6px 0 0">Sign in with your Odoo email and your app password.</p></div>
+  <div class="field"><label for="le">Email</label><div class="inw">${ic('users',18)}<input class="inp" id="le" type="email" autocomplete="username" placeholder="name@emanbakeries.com"></div></div>
+  <div class="field"><label for="lp">Password</label><div class="inw">${ic('shield',18)}<input class="inp" id="lp" type="password" autocomplete="current-password"><button type="button" class="eye" data-act="togpw" aria-label="Show password">${ic('list',18)}</button></div></div>
+  <div class="muted" id="lerr" style="color:var(--bad);font-weight:700;min-height:0"></div>
+  <button class="btn pri" type="submit">Sign in ${ic('chev',18)}</button></form></section></div>`;
+}
+function shell(inner){
+  const u=me();const lock=overdue().length>0;const pn=pending().length;
+  const navs=NAV.filter(n=>n[3]());
+  const nb=navs.map(n=>{const dis=lock&&n[0]!=='pending'?'disabled':'';return `<button data-act="nav" data-id="${n[0]}" class="${UI.view===n[0]?'on':''}" ${dis} title="${n[1]}">${ic(n[2])}<span class="lb">${n[1]}</span>${n[0]==='pending'&&pn?`<span class="bdg">${pn}</span>`:''}</button>`}).join('');
+  const tabs=['home','new','pending','payments'].map(k=>navs.find(n=>n[0]===k)).filter(Boolean);
+  const tb=tabs.map(n=>{const dis=lock&&n[0]!=='pending'?'disabled':'';return `<button data-act="nav" data-id="${n[0]}" class="${UI.view===n[0]?'on':''}" ${dis}>${ic(n[2],22)}${n[1].replace('New order','New')}${n[0]==='pending'&&pn?`<span class="bdg">${pn}</span>`:''}</button>`}).join('')+`<button data-act="more" class="${UI.more?'on':''}">${ic('more',22)}More</button>`;
+  return `<div class="shell"><aside class="side"><div class="brand"><div class="logo">E</div><div><b>Eman Bakery</b><small>Orders &amp; trays</small></div></div><nav class="nav">${nb}</nav>
+  <div class="who"><div class="av">${esc(u.name[0])}</div><div><b>${esc(u.name)}</b><small>${u.admin?'Administrator':'Staff'}</small></div></div></aside>
+  <div class="main"><header class="top">${UI.view!=='home'?`<button class="iconbtn flip" data-act="back" aria-label="Back" style="margin-right:2px">${ic('chev',22)}</button>`:''}<h1>${TITLES[UI.view]||''}</h1><button class="iconbtn" data-act="theme" aria-label="Switch theme">${ic('theme')}</button><button class="iconbtn" data-act="bell" aria-label="Pending orders">${ic('bell')}${pn?`<span class="bdg" id="bellc">${pn}</span>`:''}</button><button class="iconbtn" data-act="logout" aria-label="Sign out">${ic('logout')}</button></header>
+  <main class="content" id="content"><div class="page">${lockBanner()}${inner}</div></main></div>
+  <nav class="tabbar">${tb}</nav></div>`;
+}
+
+function vHome(){
+  const u=me();const today=new Date(now()).toDateString();
+  const fin=S.orders.filter(o=>o.status==='final'&&new Date(o.finalizedAt).toDateString()===today);
+  const sales=fin.reduce((a,o)=>a+o.total,0);
+  const col=S.payments.filter(p=>new Date(p.t).toDateString()===today).reduce((a,p)=>a+toC(p.amount),0);
+  const pn=pending();const h=new Date(now()).getHours();
+  const greet=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  return `<div class="stack" style="gap:18px"><div class="greet"><h2>${greet}, ${esc(u.name)}</h2><p>${new Date(now()).toLocaleDateString([], {weekday:'long',day:'numeric',month:'long'})} · ${pn.length?pn.length+' order'+(pn.length>1?'s':'')+' waiting to be finalized':'nothing waiting to be finalized'}</p></div>
+  <div class="grid g4"><div class="card stat"><div class="si">${ic('clock',20)}</div><small>Waiting to finalize</small><b>${pn.length}</b><span>${pn.length?'Next due '+fmtT(Math.min(...pn.map(o=>o.deadline))):'Nothing pending'}</span></div>
+  <div class="card stat"><div class="si">${ic('receipt',20)}</div><small>Sales today</small><b class="num">${sar(sales)}</b><span>${fin.length} finalized order${fin.length===1?'':'s'}</span></div>
+  <div class="card stat"><div class="si">${ic('wallet',20)}</div><small>Collected today</small><b class="num">${sar(col)}</b><span>${S.payments.filter(p=>new Date(p.t).toDateString()===today).length} payment(s)</span></div>
+  <div class="card stat"><div class="si">${ic('tray',20)}</div><small>Trays with customers</small><b class="num">${nf0.format(heldAll())}</b><span>${nf0.format(stockAll())} in the branches</span></div></div>
+  <div class="grid g2"><div class="card"><div class="row sp"><h3>Pending orders</h3><button class="btn sm" data-act="nav" data-id="pending">See all</button></div>
+  ${pn.length?`<div class="list">${pn.slice(0,5).map(pendingRow).join('')}</div>`:'<div class="empty">No pending orders. Start a new one.</div>'}</div>
+  <div class="card"><h3>Quick actions</h3><div class="big" style="grid-template-columns:repeat(2,1fr)">
+  ${can('order_create')?`<button class="bigopt" data-act="nav" data-id="new" style="min-height:104px;padding:16px">${ic('plus',26)}<b style="font-size:18px">New order</b></button>`:''}
+  ${can('payments')?`<button class="bigopt" data-act="nav" data-id="payments" style="min-height:104px;padding:16px">${ic('wallet',26)}<b style="font-size:18px">Payment</b></button>`:''}
+  ${can('credit_notes')?`<button class="bigopt" data-act="nav" data-id="credit" style="min-height:104px;padding:16px">${ic('credit',26)}<b style="font-size:18px">Credit note</b></button>`:''}
+  ${can('trays_view')?`<button class="bigopt" data-act="nav" data-id="trays" style="min-height:104px;padding:16px">${ic('tray',26)}<b style="font-size:18px">Trays</b></button>`:''}</div></div></div>
+  <div class="card"><h3>Recent activity</h3>${S.audit.length?`<div class="list">${S.audit.slice(0,6).map(a=>`<div class="li"><div class="grow"><b>${esc(a.action)} <span class="muted" style="font-weight:600">${esc(a.ref)}</span></b><small>${esc(a.user)} · ${fmtT(a.t)} · ${esc(a.detail).slice(0,110)}</small></div></div>`).join('')}</div>`:'<div class="empty">Nothing yet.</div>'}</div></div>`;
+}
+function pendingRow(o){
+  const c=cust(o.cust);
+  return `<div class="li"><div class="grow"><b>${esc(c.name)} <span class="muted" style="font-weight:600">${o.id}</span></b><small>${esc(o.branch)} · ${o.lines.length} items · ${orderTotalTxt(o)}</small></div>${cdSpan(o)}<button class="btn sm pri" data-act="fin" data-id="${o.id}" ${can('order_finalize')?'':'disabled'}>Finalize</button></div>`;
+}
+
+/* ---- new order ---- */
+function draft(){return UI.draft}
+function startDraft(){UI.draft={orderId:null,branch:null,cust:null,traysIn:null,tin:'',lines:[],cat:null,step:1}}
+function editDraft(id){
+  const o=S.orders.find(x=>x.id===id);
+  UI.draft={orderId:id,branch:o.branch,cust:o.cust,traysIn:o.traysIn,tin:String(o.traysIn),lines:o.lines.map(l=>({code:l.code,qty:l.qty})),cat:null,step:4};
+  UI.view='new';
+}
+function stepsBar(d){
+  const L=['Branch','Customer','Trays','Products'];
+  return `<div class="steps">${L.map((l,i)=>{const n=i+1;const cls=d.step===n?'on':(d.step>n?'done':'');
+   const val=n===1?d.branch:n===2&&d.cust?cust(d.cust).name:n===3&&d.traysIn!=null?d.traysIn+' trays':'';
+   const can=!d.orderId&&n<d.step||(d.orderId&&n>=3&&n!==d.step);
+   return `<button class="stp ${cls}" ${can?`data-act="step" data-id="${n}"`:'disabled'} style="${can?'cursor:pointer':''}"><i>${d.step>n?ic('check',12):n}</i>${l}${val?`<b style="color:var(--ink)">· ${esc(val)}</b>`:''}</button>`}).join('')}</div>`;
+}
+function vNew(){
+  if(!UI.draft)startDraft();const d=UI.draft;
+  let b='';
+  if(d.step===1){
+    b=`<h2 style="margin-bottom:14px">Which branch is this order for?</h2><div class="big">${S.set.branches.map(x=>`<button class="bigopt ${d.branch===x?'on':''}" data-act="branch" data-id="${esc(x)}">${ic('home',26)}<b>${esc(x)}</b><span>Tap to continue</span></button>`).join('')}</div><p class="muted">The branch stays in this app. It is not sent to Odoo.</p>`;
+  } else if(d.step===2){
+    b=`<div class="row sp" style="margin-bottom:12px"><h2>Choose the customer</h2></div><div class="search" style="margin-bottom:10px"><span>${ic('search',18)}</span><input class="inp" id="cq" data-list="custList" placeholder="Search 90 customers" value="${esc(UI.q.custList||'')}" autocomplete="off"></div><div class="card" style="padding:6px 12px"><div class="list" id="custList">${lCust()}</div></div>`;
+  } else if(d.step===3){
+    const v=d.tin||'0';
+    b=`<h2 style="margin-bottom:6px">How many trays did ${esc(cust(d.cust).name)} bring?</h2><p class="muted" style="margin:0 0 10px">Brought trays are taken off what they owe and added to the ${esc(d.branch)} stock.</p><div class="hint" style="margin-bottom:14px">${maxIn()>0?`${esc(cust(d.cust).name)} holds ${maxIn()} trays. You cannot enter more than that.`:`${esc(cust(d.cust).name)} holds no trays, so only 0 can be entered.`}</div>
+    <div class="stack" style="align-items:flex-start"><div class="kdisp num" id="kd" style="width:100%">${esc(v)}</div>
+    <div class="row">${[0,5,10,20,30].map(n=>`<button class="chip" data-act="tset" data-id="${n}">${n}</button>`).join('')}</div>
+    <div class="keypad" style="width:100%">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-act="key" data-id="${n}">${n}</button>`).join('')}<button data-act="key" data-id="C" aria-label="Clear">C</button><button data-act="key" data-id="0">0</button><button data-act="key" data-id="B" aria-label="Backspace">⌫</button></div>
+    <button class="btn pri" style="width:100%;max-width:340px" data-act="tnext">Continue to products ${ic('chev',18)}</button></div>`;
+  } else b=vPick(d);
+  return stepsBar(d)+b;
+}
+function lCust(){
+  const q=(UI.q.custList||'').toLowerCase();
+  const list=S.customers.filter(c=>c.active&&(!q||c.name.toLowerCase().includes(q)||c.code.toLowerCase().includes(q)));
+  if(!list.length)return '<div class="empty">No customer matches.</div>';
+  return list.map(c=>{const bal=balance(c);return `<button class="li" data-act="pickcust" data-id="${c.code}"><div class="grow"><b>${esc(c.name)}</b><small>${c.code} · ${held(c.code)} trays held</small></div><span class="num" style="font-weight:800;color:${bal<0?'var(--good)':'var(--ink)'}">${bal<0?'-':''}${sar(Math.abs(bal))}</span>${ic('chev',18)}</button>`}).join('');
+}
+function cats(){const m={};S.products.filter(p=>p.active).forEach(p=>m[p.cat]=(m[p.cat]||0)+1);return Object.keys(m).sort().map(k=>[k,m[k]])}
+function usual(cc){
+  const set=new Set();S.orders.filter(o=>o.cust===cc&&o.status==='final').slice(0,3).forEach(o=>o.lines.forEach(l=>set.add(l.code)));return [...set];
+}
+function vPick(d){
+  const cs=cats();const us=usual(d.cust);
+  if(d.cat&&d.cat!=='__usual'&&!cs.find(c=>c[0]===d.cat))d.cat=null;
+  const inCat={};d.lines.forEach(l=>{const p=prod(l.code);if(p)inCat[p.cat]=(inCat[p.cat]||0)+l.qty});
+  const nice=s=>s.replace(/ BREAD$/,'').toLowerCase().replace(/\b\w/g,x=>x.toUpperCase());
+  const chips=(us.length?[`<button class="chip ${d.cat==='__usual'?'on':''}" data-act="cat" data-id="__usual">★ Usual</button>`]:[]).concat(cs.map(c=>`<button class="chip ${d.cat===c[0]?'on':''}" data-act="cat" data-id="${esc(c[0])}">${esc(nice(c[0]))}${inCat[c[0]]?` <b>${inCat[c[0]]}</b>`:''}</button>`)).join('');
+  const small=innerWidth<=760;
+  const chipsAll=chips;
+  const inC=d.cat&&d.cat!=='__usual'?S.products.filter(p=>p.active&&p.cat===d.cat):[];
+  const sizes=[...new Set(inC.map(p=>p.ppp))].sort((a,b)=>a-b);
+  if(sizes.length===1&&d.pcs==null)d.pcs=sizes[0];
+  if(d.pcs!=null&&!sizes.includes(d.pcs)&&d.cat!=='__usual')d.pcs=null;
+  let items=[];
+  if(d.cat==='__usual')items=S.products.filter(p=>p.active&&us.includes(p.code));
+  else if(d.cat&&d.pcs!=null)items=inC.filter(p=>p.ppp===d.pcs);
+  const tiles=items.map(p=>{const q=(d.lines.find(l=>l.code===p.code)||{}).qty||0;const pr=priceFor(d.cust,p.code);
+    return `<div class="pt ${q?'on':''}" data-act="padd" data-id="${p.code}" tabindex="0" role="button" aria-label="Add ${esc(p.name)}"><div class="pt-name">${esc(p.name)}</div><div class="pt-meta">${p.ppp} pcs per packet</div>
+    <div class="pt-foot"><div><span class="price num">${nf.format(pr.v)}</span> ${pr.custom?'<span class="tagc">Custom</span>':''}</div></div>
+    <div class="stepper" style="${q?'':'visibility:hidden'}"><button data-act="pdec" data-id="${p.code}" aria-label="Less">${ic('minus',18)}</button><input inputmode="numeric" data-qty="${p.code}" value="${q}" aria-label="Quantity"><button data-act="pinc" data-id="${p.code}" aria-label="More">${ic('plus',18)}</button></div></div>`}).join('');
+  const pcsRow=sizes.length>1?`<div><div class="pkh"><i>2</i> Pieces per packet</div><div class="pcsrow" style="margin-top:8px">${sizes.map(n=>`<button class="pcsb ${d.pcs===n?'on':''}" data-act="pcs" data-id="${n}"><b>${n}</b><small>${inC.filter(p=>p.ppp===n).length} item${inC.filter(p=>p.ppp===n).length>1?'s':''}</small></button>`).join('')}</div></div>`:'';
+  const c=cust(d.cust);
+  let body;
+  if(!d.cat)body=`<div class="ghost"><b>Pick a category</b>Then choose the pieces per packet, then tap the product.</div>`;
+  else if(d.cat!=='__usual'&&d.pcs==null)body=`<div class="ghost"><b>How many pieces per packet?</b>Choose one above to see the products.</div>`;
+  else body=`<div><div class="pkh"><i>${d.cat==='__usual'?'2':'3'}</i> ${d.cat==='__usual'?'Usual products for this customer':'Products'}</div><div class="prods" style="margin-top:8px">${tiles||'<div class="empty">Nothing here yet.</div>'}</div></div>`;
+  return `<div class="pick"><div class="pk"><div class="row sp"><div><b>${esc(c.name)}</b> <span class="muted">· ${esc(d.branch)} · ${d.traysIn} trays brought</span></div></div>
+  <div><div class="pkh"><i>1</i> Category</div><div class="catgrid" id="chips" style="margin-top:8px">${small&&d.cat&&!d.catOpen?`<button class="chip on" data-act="catopen">${esc(d.cat==='__usual'?'★ Usual':nice(d.cat))} &nbsp;·&nbsp; Change</button>`:chips}</div></div>${pcsRow}${body}</div>
+  <div class="cart desk card">${cartHtml(d)}</div></div>
+  ${d.lines.length?`<button class="cartbar" data-act="opencart"><span>${ic('cart')} ${d.lines.reduce((a,l)=>a+l.qty,0)} packets</span><span class="num">${sar0(totals(d.lines,d.cust).rounded)} &nbsp;›</span></button>`:''}`;
+}
+function cartHtml(d){
+  const T=totals(d.lines,d.cust);const edit=!!d.orderId;
+  const lines=d.lines.map(l=>{const p=prod(l.code);const pr=priceFor(d.cust,l.code).v;
+    return `<div class="cl"><div><b>${esc(p.name)}</b><br><small class="num">${nf.format(pr)} × ${l.qty} = ${nf.format(pr*l.qty)}</small></div><div class="stepper"><button data-act="pdec" data-id="${l.code}" aria-label="Less">${ic('minus',16)}</button><input inputmode="numeric" data-qty="${l.code}" value="${l.qty}" aria-label="Quantity"><button data-act="pinc" data-id="${l.code}" aria-label="More">${ic('plus',16)}</button></div></div>`}).join('');
+  return `<div class="row sp"><h3 style="margin:0">${edit?'Editing '+d.orderId:'Order so far'}</h3>${d.lines.length?`<button class="btn sm" data-act="clearcart">Clear</button>`:''}</div>
+  <div class="lines">${lines||'<div class="empty">Tap a product to add it.</div>'}</div>
+  <div class="tot"><div><span class="muted">Subtotal</span><span class="num">${sar(T.sub)}</span></div><div><span class="muted">Whole-riyal rounding</span><span class="num">${T.diff>=0?'+':''}${nf.format(T.diff/100)}</span></div><div class="grand"><span>Total</span><span class="num">${sar0(T.rounded)}</span></div></div>
+  <div style="margin-top:12px" class="stack"><button class="btn pri" data-act="${edit?'savechg':'create'}" ${d.lines.length?'':'disabled'}>${ic('check',18)} ${edit?'Save changes':'Create order'}</button>${edit?`<button class="btn" data-act="canceledit">Back without saving</button>`:''}</div>
+  <p class="muted" style="font-size:12.5px;margin:10px 0 0">${edit?'Time left':'After creating, finalize within'} ${S.set.finalizeMin} minutes and before midnight.</p>`;
+}
+
+/* ---- pending ---- */
+function vPending(){
+  const p=pending();
+  if(!p.length)return `<div class="card empty">${ic('check',30)}<h3 style="margin-top:8px">All caught up</h3><p>No orders are waiting to be finalized.</p></div>`;
+  return `<div class="grid g2">${p.map(o=>{const c=cust(o.cust);const ms=o.deadline-now();
+   return `<div class="card stack" style="${ms<=0?'border-color:var(--bad)':''}"><div class="row sp"><div><h3 style="margin:0">${esc(c.name)}</h3><small class="muted">${o.id} · ${esc(o.branch)} · by ${esc(o.by)}</small></div>${cdSpan(o)}</div>
+   <div class="muted" style="font-size:13.5px">${o.lines.slice(0,4).map(l=>esc(prod(l.code).name)+' ×'+l.qty).join(' · ')}${o.lines.length>4?' · +'+(o.lines.length-4)+' more':''}</div>
+   <div class="row sp"><span class="pill info">${ic('tray',14)} ${o.traysIn} trays in</span><b class="num" style="font-family:var(--f-disp);font-size:22px">${orderTotalTxt(o)}</b></div>
+   <div class="row"><button class="btn pri" style="flex:1" data-act="fin" data-id="${o.id}" ${can('order_finalize')?'':'disabled'}>Finalize</button><button class="btn" data-act="editord" data-id="${o.id}" ${can('order_create')&&ms>0?'':'disabled'}>${ic('edit',16)} Edit</button><button class="btn" data-act="print" data-id="${o.id}" aria-label="Print slip">${ic('receipt',16)}</button><button class="btn bad" data-act="cancelord" data-id="${o.id}" ${can('order_cancel')?'':'disabled'} aria-label="Cancel order">${ic('trash',16)}</button></div></div>`}).join('')}</div>`;
+}
+function vOrders(){
+  const t=UI.tab.orders||'final';const q=(UI.q.ordList||'');
+  return `<div class="tabs">${[['final','Finalized'],['pending','Pending'],['cancelled','Cancelled']].map(x=>`<button class="tab ${t===x[0]?'on':''}" data-act="tab" data-grp="orders" data-id="${x[0]}">${x[1]}</button>`).join('')}</div>
+  <div class="search" style="margin-bottom:12px;max-width:420px"><span>${ic('search',18)}</span><input class="inp" data-list="ordList" placeholder="Search order, invoice or customer" value="${esc(q)}" autocomplete="off"></div><div id="ordList">${lOrders()}</div>`;
+}
+function lOrders(){
+  const t=UI.tab.orders||'final';const q=(UI.q.ordList||'').toLowerCase();
+  const list=S.orders.filter(o=>o.status===t&&(!q||(o.id+(o.inv||'')+cust(o.cust).name).toLowerCase().includes(q)));
+  if(!list.length)return '<div class="card empty">No orders here.</div>';
+  return `<div class="tbl"><table><thead><tr><th>Order</th><th>Customer</th><th>Branch</th><th>Created</th><th>Invoice</th><th class="r">Total</th><th>Odoo</th></tr></thead><tbody>${list.map(o=>`<tr style="cursor:pointer" data-act="orddet" data-id="${o.id}"><td><b>${o.id}</b></td><td>${esc(cust(o.cust).name)}</td><td>${esc(o.branch)}</td><td>${fmtDT(o.createdAt)}</td><td>${o.inv||'—'}</td><td class="r num">${o.status==='final'?sar(o.total):orderTotalTxt(o)}</td><td>${o.odoo?odooPill(o.odoo.state):'<span class="muted">—</span>'}</td></tr>`).join('')}</tbody></table></div>`;
+}
+const odooPill=s=>s==='posted'?'<span class="pill good">Posted</span>':s==='queued'?'<span class="pill warn">Queued</span>':'<span class="pill bad">Failed</span>';
+
+/* ---- payments / credit ---- */
+function custPicker(key,label){
+  const sel=UI.sel[key];const c=sel&&cust(sel);
+  return `<div class="field"><label>${label}</label>${c?`<div class="row sp card" style="padding:10px 14px;box-shadow:none"><div><b>${esc(c.name)}</b><br><small class="muted">Owes ${balance(c)<0?'(credit) ':''}${sar(Math.abs(balance(c)))}</small></div><button class="btn sm" data-act="clrcust" data-id="${key}">Change</button></div>`
+   :`<div class="search"><span>${ic('search',18)}</span><input class="inp" data-list="${key}List" placeholder="Search customer" value="${esc(UI.q[key+'List']||'')}" autocomplete="off"></div><div class="card" style="padding:4px 10px;max-height:280px;overflow:auto;box-shadow:none"><div class="list" id="${key}List">${lPick(key)}</div></div>`}</div>`;
+}
+function lPick(key){
+  const q=(UI.q[key+'List']||'').toLowerCase();
+  const l=S.customers.filter(c=>c.active&&(!q||c.name.toLowerCase().includes(q)));
+  return l.length?l.map(c=>`<button class="li" data-act="selcust" data-grp="${key}" data-id="${c.code}"><div class="grow"><b>${esc(c.name)}</b></div><span class="num muted">${sar(balance(c))}</span></button>`).join(''):'<div class="empty">No match.</div>';
+}
+const METHODS=['Cash','SAB bank','Neoleap wallet','HALA bank','Kafeel Al Rajhi','Shaikhs bank'];
+function payState(){return UI.pay||(UI.pay={total:'',date:new Date(now()).toISOString().slice(0,10),note:'',lines:[]})}
+const pc=v=>toC(parseFloat(v)||0);
+function payCalc(){const P=payState();const tot=pc(P.total);const al=P.lines.reduce((a,l)=>a+pc(l.amt),0);return {tot,al,left:tot-al}}
+function payOk(){const c=payCalc();const P=payState();return c.tot>0&&P.lines.length>0&&c.left===0&&P.lines.every(l=>pc(l.amt)>0)}
+function payStat(){const c=payCalc();return c.tot<=0?['Enter the total amount received','']:c.left===0&&payState().lines.length?['Fully allocated. Ready to post','ok']:c.left>0?[sar(c.left)+' still to allocate','bad']:['Over by '+sar(-c.left)+'. Lower an amount','bad']}
+function updPay(){const s=payStat();const e=$('#paystat');if(e){e.textContent=s[0];e.className='pstat '+s[1]}const b=$('#paybtn');if(b)b.disabled=!payOk()}
+function lPayPick(){
+  const q=(UI.q.payList||'').toLowerCase();const used=payState().lines.map(l=>l.cc);
+  const l=S.customers.filter(c=>c.active&&!used.includes(c.code)&&(!q||c.name.toLowerCase().includes(q)));
+  return l.length?l.map(c=>`<button type="button" class="li" data-act="payadd" data-id="${c.code}"><div class="grow"><b>${esc(c.name)}</b></div><span class="num muted">${sar(balance(c))}</span></button>`).join(''):'<div class="empty">No match.</div>';
+}
+function vPayments(){
+  const P=payState();const m=UI.sel.method||'Cash';const s=payStat();
+  const rows=S.payments.slice(0,14);
+  const showPick=UI.payAdd||!P.lines.length;
+  return `<div class="grid g2" style="align-items:start"><form class="card stack" id="payf">
+  <div class="field"><label>1. Paid by</label><div class="chips" style="flex-wrap:wrap">${METHODS.map(x=>`<button type="button" class="chip ${m===x?'on':''}" data-act="method" data-id="${x}">${x}</button>`).join('')}</div></div>
+  <div class="field"><label for="pa">2. Total received (SAR)</label><input class="inp num" id="pa" inputmode="decimal" placeholder="0.00" autocomplete="off" value="${esc(P.total)}"><small class="muted">The full amount of the transfer or cash. You split it between customers below.</small></div>
+  <div class="row"><div class="field" style="flex:1"><label for="pd">Date</label><input class="inp" id="pd" type="date" value="${esc(P.date)}"></div><div class="field" style="flex:1"><label for="pn">Reference or note</label><input class="inp" id="pn" autocomplete="off" value="${esc(P.note)}" placeholder="Transfer number"></div></div>
+  <div class="field"><label>3. Who is it for?</label><div class="stack" style="gap:8px">${P.lines.map(l=>{const c=cust(l.cc);return `<div class="payl"><div class="grow" style="flex:1;min-width:130px"><b>${esc(c.name)}</b><br><small class="muted">Owes ${balance(c)<0?'(credit) ':''}${sar(Math.abs(balance(c)))}</small></div><input class="inp num" id="pl_${l.cc}" data-pl="${l.cc}" inputmode="decimal" placeholder="0.00" value="${esc(l.amt)}" aria-label="Amount for ${esc(c.name)}"><button type="button" class="btn sm" data-act="payfill" data-id="${l.cc}">Rest</button><button type="button" class="iconbtn" style="width:36px;height:36px" data-act="payrm" data-id="${l.cc}" aria-label="Remove">${ic('x',14)}</button></div>`}).join('')}</div>
+  ${showPick?`<div class="search" style="margin-top:8px"><span>${ic('search',18)}</span><input class="inp" data-list="payList" placeholder="Search a customer to add" value="${esc(UI.q.payList||'')}" autocomplete="off"></div><div class="card" style="padding:4px 10px;max-height:240px;overflow:auto;box-shadow:none"><div class="list" id="payList">${lPayPick()}</div></div>`:`<button type="button" class="btn" style="margin-top:8px" data-act="payaddopen">${ic('plus',16)} Add another customer</button>`}</div>
+  <div class="pstat ${s[1]}" id="paystat">${s[0]}</div>
+  <button class="btn pri" id="paybtn" type="submit" ${payOk()?'':'disabled'}>${ic('check',18)} Post to Odoo</button><p class="muted" style="font-size:13px;margin:0">One payment is posted per customer. Each pays that customer's oldest open invoices first. Any extra stays as credit.</p></form>
+  <div class="card"><h3>Recent payments</h3>${rows.length?`<div class="list">${rows.map(p=>`<div class="li"><div class="grow"><b>${esc(cust(p.cust).name)} · ${sar(toC(p.amount))}</b><small>${p.id} · ${esc(p.method)}${p.group?' · part of '+p.group+' ('+sar(p.groupTotal)+')':''} · ${p.by} · ${fmtT(p.t)}</small></div>${odooPill(p.odoo.state)}${can('payments')?`<button class="btn sm" data-act="payrev" data-id="${p.id}">Reverse</button>`:''}</div>`).join('')}</div>`:'<div class="empty">No payments yet.</div>'}</div></div>`;
+}
+const REASONS=['Discount','Round off','Returned goods','Price correction','Other'];
+function vCredit(){
+  const c=UI.sel.cn;const r=UI.sel.reason||'Discount';
+  return `<div class="grid g2" style="align-items:start"><form class="card stack" id="cnf">${custPicker('cn','Customer')}
+  <div class="field"><label for="ca">Discount amount (SAR)</label><input class="inp num" id="ca" inputmode="decimal" placeholder="0.00" autocomplete="off"></div>
+  <div class="field"><label>Reason</label><div class="chips" style="flex-wrap:wrap">${REASONS.map(x=>`<button type="button" class="chip ${r===x?'on':''}" data-act="reason" data-id="${x}">${x}</button>`).join('')}</div></div>
+  <div class="field"><label for="cnn">Note (optional)</label><input class="inp" id="cnn" autocomplete="off"></div>
+  <button class="btn pri" type="submit" ${c?'':'disabled'}>${ic('check',18)} Post credit note to Odoo</button><p class="muted" style="font-size:13px;margin:0">Posted as a credit note on Sales Account 500100, so sales reports stay net of discounts.</p></form>
+  <div class="card"><h3>Recent credit notes</h3>${S.credits.length?`<div class="list">${S.credits.slice(0,12).map(p=>`<div class="li"><div class="grow"><b>${esc(cust(p.cust).name)} · ${sar(toC(p.amount))}</b><small>${p.id} · ${esc(p.reason)} · ${p.by} · ${fmtT(p.t)}</small></div>${odooPill(p.odoo.state)}</div>`).join('')}</div>`:'<div class="empty">No credit notes yet.</div>'}</div></div>`;
+}
+
+/* ---- trays ---- */
+function vTrays(){
+  const t=UI.tab.trays||'over';const tabs=[['over','Overview'],['moves','Movements']];
+  let b='';
+  const H=heldAll();
+  if(t==='over'){
+    const rows=S.customers.map(c=>[c,held(c.code)]).sort((a,b)=>b[1]-a[1]);
+    b=`<div class="grid g4" style="margin-bottom:16px">${S.set.branches.map(br=>`<div class="card stat"><small>${esc(br)} stock</small><b class="num">${nf0.format(bstock(br))}</b><span>Trays in this branch now</span></div>`).join('')}<div class="card stat"><small>With customers</small><b class="num">${nf0.format(H)}</b><span>${rows.filter(r=>r[1]>0).length} customers</span></div><div class="card stat"><small>All trays</small><b class="num">${nf0.format(H+stockAll())}</b><span>Branches plus customers</span></div></div>
+    <div class="tbl"><table><thead><tr><th>Customer</th><th class="r">Trays held</th><th>Last movement</th><th></th></tr></thead><tbody>${rows.map(([c,n])=>{const l=S.trays.find(x=>x.cust===c.code);return `<tr><td><b>${esc(c.name)}</b><br><small class="muted">${c.code}</small></td><td class="r num"><b>${n}</b></td><td>${l?fmtDT(l.t)+' · '+esc(l.ref):'—'}</td><td class="r"><button class="btn sm" data-act="traycust" data-id="${c.code}">Ledger</button></td></tr>`}).join('')}</tbody></table></div>`;
+  } else {
+    const cc=UI.sel.trayCust,br=UI.sel.trayBr||'';const rows=S.trays.filter(r=>(!cc||r.cust===cc)&&(!br||r.branch===br)).slice(0,300);
+    const TL={in:'Brought in',out:'Taken out',opening:'Opening',bopen:'Branch opening',adjust:'Order change'};
+    b=`<div class="row" style="margin-bottom:12px"><select class="inp" style="max-width:260px" id="trayf" aria-label="Filter by customer"><option value="">All customers</option>${S.customers.map(c=>`<option value="${c.code}" ${cc===c.code?'selected':''}>${esc(c.name)}</option>`).join('')}</select><select class="inp" style="max-width:220px" id="trayb" aria-label="Filter by branch"><option value="">Both branches</option>${S.set.branches.map(x=>`<option ${br===x?'selected':''}>${esc(x)}</option>`).join('')}</select>${cc?`<span class="pill brand">Holds ${held(cc)} trays</span>`:''}${br?`<span class="pill brand">${nf0.format(bstock(br))} in stock</span>`:''}</div><p class="muted" style="margin:0 0 12px">Trays move only when an order is created, edited, cancelled or finalized. Rows are never edited or deleted.</p>
+    <div class="tbl"><table><thead><tr><th>When</th><th>Branch</th><th>Customer</th><th>Type</th><th>Reference</th><th class="r">Customer holds</th><th class="r">Branch stock</th><th>By</th><th>Note</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${fmtDT(r.t)}</td><td>${esc(r.branch||'—')}</td><td>${r.cust?esc(cust(r.cust).name):'—'}</td><td><span class="pill ${r.type==='in'?'good':r.type==='out'?'warn':'info'}">${TL[r.type]||r.type}</span></td><td>${esc(r.ref)}</td><td class="r num">${r.cust?`<b style="color:${r.qty<0?'var(--good)':'var(--ink)'}">${r.qty>0?'+':''}${r.qty}</b>`:''}</td><td class="r num">${r.branch?`<b>${(r.cust?-r.qty:r.qty)>0?'+':''}${r.cust?-r.qty:r.qty}</b>`:''}</td><td>${esc(r.by)}</td><td class="muted">${esc(r.reason)}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  return `<div class="tabs">${tabs.map(x=>`<button class="tab ${t===x[0]?'on':''}" data-act="tab" data-grp="trays" data-id="${x[0]}">${x[1]}</button>`).join('')}</div>${b}`;
+}
+
+/* ---- customers ---- */
+function vCustomers(){
+  const sel=UI.sel.custView;
+  if(sel)return custDetail(sel,false);
+  return `<div class="search" style="margin-bottom:12px;max-width:420px"><span>${ic('search',18)}</span><input class="inp" data-list="cvList" placeholder="Search customers" value="${esc(UI.q.cvList||'')}" autocomplete="off"></div><div class="card" style="padding:6px 12px"><div class="list" id="cvList">${lCV()}</div></div>`;
+}
+function lCV(){
+  const q=(UI.q.cvList||'').toLowerCase();
+  return S.customers.filter(c=>!q||c.name.toLowerCase().includes(q)).map(c=>`<button class="li" data-act="viewcust" data-id="${c.code}"><div class="grow"><b>${esc(c.name)}</b><small>${c.code} · ${held(c.code)} trays · ${Object.keys(S.custom[c.code]||{}).length} custom prices</small></div><span class="num" style="font-weight:800">${sar(balance(c))}</span>${ic('chev',18)}</button>`).join('')||'<div class="empty">No match.</div>';
+}
+function custDetail(cc,edit){
+  const c=cust(cc);const q=(UI.q.prList||'').toLowerCase();
+  const rows=S.products.filter(p=>p.active&&(!q||p.name.toLowerCase().includes(q)||p.cat.toLowerCase().includes(q)));
+  const ords=S.orders.filter(o=>o.cust===cc).slice(0,5);
+  return `<div class="stack" style="gap:16px"><div class="row sp"><button class="btn sm" data-act="${edit?'admcustback':'custback'}">${ic('back',16)} All customers</button></div>
+  <div class="grid g4"><div class="card stat"><small>${esc(c.code)}</small><b>${esc(c.name)}</b><span>${c.active?'Active':'Inactive'}</span></div><div class="card stat"><small>Balance</small><b class="num">${sar(balance(c))}</b><span>Mirrors Odoo receivable</span></div><div class="card stat"><small>Trays held</small><b class="num">${held(cc)}</b><span>App only</span></div><div class="card stat"><small>Custom prices</small><b class="num">${Object.keys(S.custom[cc]||{}).length}</b><span>of ${S.products.length} products</span></div></div>
+  ${ords.length?`<div class="card"><h3>Recent orders</h3><div class="list">${ords.map(o=>`<div class="li"><div class="grow"><b>${o.id}</b><small>${fmtDT(o.createdAt)} · ${o.status}</small></div><b class="num">${o.status==='final'?sar(o.total):orderTotalTxt(o)}</b></div>`).join('')}</div></div>`:''}
+  <div class="card"><div class="row sp" style="margin-bottom:10px"><h3 style="margin:0">Price list</h3><div class="search" style="max-width:300px;flex:1"><span>${ic('search',18)}</span><input class="inp" data-list="prList" placeholder="Search products" value="${esc(UI.q.prList||'')}" autocomplete="off"></div></div>
+  <div id="prList">${lPrices(cc,edit)}</div></div></div>`;
+}
+function lPrices(cc,edit){
+  const q=(UI.q.prList||'').toLowerCase();
+  const rows=S.products.filter(p=>p.active&&(!q||p.name.toLowerCase().includes(q)||p.cat.toLowerCase().includes(q)));
+  return `<div class="tbl" style="max-height:520px"><table><thead><tr><th>Product</th><th>Category</th><th class="r">Default</th><th class="r">${edit?'Customer price':'Price'}</th><th>Source</th></tr></thead><tbody>${rows.map(p=>{const pr=priceFor(cc,p.code);return `<tr><td><b>${esc(p.name)}</b><br><small class="muted">${p.code}</small></td><td>${esc(p.cat)}</td><td class="r num">${nf.format(p.dflt)}</td><td class="r num">${edit?`<input class="inp num" style="width:100px;text-align:right;min-height:38px" inputmode="decimal" data-price="${p.code}" data-cust="${cc}" value="${pr.custom?pr.v:''}" placeholder="${nf.format(p.dflt)}" aria-label="Customer price for ${esc(p.name)}">`:`<b>${nf.format(pr.v)}</b>`}</td><td>${pr.custom?'<span class="pill warn">Custom</span>':'<span class="pill">Default</span>'}</td></tr>`}).join('')}</tbody></table></div>`;
+}
+function vSync(){
+  const items=[];
+  S.orders.filter(o=>o.odoo).forEach(o=>items.push({t:o.finalizedAt,kind:'Invoice',ref:o.inv||o.id,who:cust(o.cust).name,amt:o.total,st:o.odoo.state,msg:o.odoo.msg}));
+  S.payments.forEach(p=>items.push({t:p.t,kind:'Payment',ref:p.id,who:cust(p.cust).name,amt:toC(p.amount),st:p.odoo.state,msg:p.odoo.msg||p.odoo.ref||''}));
+  S.credits.forEach(p=>items.push({t:p.t,kind:'Credit note',ref:p.id,who:cust(p.cust).name,amt:toC(p.amount),st:p.odoo.state,msg:p.odoo.msg||p.odoo.ref||''}));
+  items.sort((a,b)=>b.t-a.t);const q=items.filter(i=>i.st==='queued').length,fl=items.filter(i=>i.st==='failed').length;
+  return `<div class="row sp" style="margin-bottom:14px"><div class="row"><span class="pill ${S.set.offline||fl?'bad':q?'warn':'good'}">${S.set.offline?'Odoo switched off (test mode)':fl?fl+' refused by Odoo':q?q+' waiting':'All posted'}</span><span class="muted">${esc(S.set.odooUrl)}</span></div><div class="row"><button class="btn pri" data-act="retry" ${q?'':'disabled'}>${ic('sync',16)} Retry ${q} waiting</button>${fl?`<button class="btn" data-act="retryfailed">Retry ${fl} refused</button>`:''}</div></div>
+  ${items.length?`<div class="tbl"><table><thead><tr><th>When</th><th>Type</th><th>Reference</th><th>Customer</th><th class="r">Amount</th><th>Status</th><th>Detail</th></tr></thead><tbody>${items.map(i=>`<tr><td>${fmtDT(i.t)}</td><td>${i.kind}</td><td><b>${esc(i.ref)}</b></td><td>${esc(i.who)}</td><td class="r num">${sar(i.amt)}</td><td>${odooPill(i.st)}</td><td class="muted">${esc(i.msg)}</td></tr>`).join('')}</tbody></table></div>`:'<div class="card empty">Nothing has been sent to Odoo yet. Finalize an order to see it here.</div>'}
+  <p class="muted" style="margin-top:12px">If Odoo is down, finalized orders and payments wait here and are retried. Nothing is posted twice, because every send first checks Odoo for the same reference.</p>`;
+}
+
+/* ---- admin ---- */
+function vAdmin(){
+  const t=UI.tab.admin||'users';
+  const tabs=[['users','Users'],['products','Products'],['custs','Customers and prices'],['trayopen','Opening trays'],['data','Data and Odoo'],['audit','Audit log'],['settings','Settings']];
+  let b='';
+  if(t==='users'){
+    b=`<div class="row sp" style="margin-bottom:12px"><p class="muted" style="margin:0;max-width:60ch">A user here is also a user in Odoo. The Odoo email, the API key and the app password are set per person. Invoices and payments posted by this person are created in Odoo under their name.</p><button class="btn pri" data-act="usernew">${ic('plus',16)} Add user</button></div>
+    <div class="tbl"><table><thead><tr><th>User</th><th>Odoo login</th><th>Odoo API key</th><th>Access</th><th>Status</th><th></th></tr></thead><tbody>${S.users.map(u=>`<tr><td><b>${esc(u.name)}</b>${u.admin?' <span class="pill brand">Admin</span>':''}</td><td>${esc(u.email)}</td><td>${u.key?'<span class="pill good">Set</span>':'<span class="pill bad">Missing</span>'}</td><td>${u.admin?'Everything':u.feat.length+' of '+ALLF.length+' features'}</td><td>${u.active?'<span class="pill good">Active</span>':'<span class="pill">Disabled</span>'}</td><td class="r"><button class="btn sm" data-act="useredit" data-id="${u.id}">Edit</button></td></tr>`).join('')}</tbody></table></div>`;
+  } else if(t==='products'){
+    const q=UI.q.apList||'';
+    b=`<div class="row sp" style="margin-bottom:12px"><div class="search" style="flex:1;max-width:420px"><span>${ic('search',18)}</span><input class="inp" data-list="apList" placeholder="Search products" value="${esc(q)}" autocomplete="off"></div><button class="btn pri" data-act="prodnew">${ic('plus',16)} Add product</button></div><div id="apList">${lAP()}</div>`;
+  } else if(t==='custs'){
+    b=UI.sel.admCust?custDetail(UI.sel.admCust,true):`<div class="row sp" style="margin-bottom:12px"><div class="search" style="flex:1;max-width:420px"><span>${ic('search',18)}</span><input class="inp" data-list="acList" placeholder="Search customers" value="${esc(UI.q.acList||'')}" autocomplete="off"></div><button class="btn pri" data-act="custnew">${ic('plus',16)} Add customer</button></div><div class="card" style="padding:6px 12px"><div class="list" id="acList">${lAC()}</div></div>`;
+  } else if(t==='trayopen'){
+    b=`<p class="muted" style="margin:0 0 14px;max-width:70ch">Enter the tray counts you start with. After this, trays only move through orders. Every change here is saved as a new row in the tray ledger with your name.</p>
+    <div class="grid g2" style="align-items:start"><form class="card stack" id="bof"><h3>Trays in stock at each branch</h3>${S.set.branches.map((br,i)=>`<div class="field"><label for="bo${i}">${esc(br)}</label><input class="inp num" id="bo${i}" inputmode="numeric" value="${openB(br)}"><small class="muted">In stock now: ${bstock(br)}</small></div>`).join('')}<button class="btn pri" type="submit">Save branch stock</button></form>
+    <div class="card"><h3>Trays held by each customer</h3><div class="search" style="margin:8px 0"><span>${ic('search',18)}</span><input class="inp" data-list="otList" placeholder="Search customers" value="${esc(UI.q.otList||'')}" autocomplete="off"></div><div class="list" id="otList" style="max-height:480px;overflow:auto">${lOT()}</div></div></div>`;
+  } else if(t==='data'){
+    b=`<div class="grid g2" style="align-items:start"><div class="card stack"><h3>1. Starting data</h3><p class="muted" style="margin:0">Load the products, customers and price list from your starting-data file (data.json). Run this once. Running it again updates names and replaces all customer prices.</p>
+    <input class="inp" id="impf" type="file" accept=".json,application/json"><p class="muted" style="margin:0;font-size:13px">Now in the app: ${S.products.length} products, ${S.customers.length} customers, ${Object.values(S.custom).reduce((a,m)=>a+Object.keys(m).length,0)} custom prices.</p></div>
+    <div class="card stack"><h3>2. Odoo</h3><p class="muted" style="margin:0">These use your own Odoo API key. Do these in order before the first real order.</p>
+    <button class="btn" data-act="odootest">Test connection and company name</button>
+    <button class="btn" data-act="odoobal">Load starting balances from Odoo</button>
+    <button class="btn" data-act="odonum">Continue order, payment and credit note numbers from Odoo</button>
+    ${UI.sel.adminMsg?`<div class="pstat">${esc(UI.sel.adminMsg)}</div>`:''}</div></div>`;
+  } else if(t==='audit'){
+    b=`<div class="row" style="margin-bottom:12px"><div class="search" style="flex:1;max-width:380px"><span>${ic('search',18)}</span><input class="inp" data-list="auList" placeholder="Search the log" value="${esc(UI.q.auList||'')}" autocomplete="off"></div><select class="inp" id="auser" style="max-width:200px" aria-label="Filter by user"><option value="">All users</option>${S.users.map(u=>`<option ${UI.sel.auser===u.name?'selected':''}>${esc(u.name)}</option>`).join('')}</select></div><div id="auList">${lAU()}</div>`;
+  } else {
+    const s=S.set;
+    b=`<div class="grid g2" style="align-items:start"><form class="card stack" id="setf"><h3>Orders and trays</h3>
+    <div class="field"><label for="s1">Minutes allowed to finalize an order</label><input class="inp" id="s1" inputmode="numeric" value="${s.finalizeMin}"><small class="muted">Also capped at midnight of the day it was created.</small></div>
+    <div class="field"><label>Branches</label><div class="muted">${s.branches.map(esc).join(' · ')}</div><small class="muted">Names are fixed because the tray ledger keeps them forever.</small></div>
+    <h3 style="margin-top:6px">Receipt printer (80 mm)</h3><div class="ftog"><div><b>Print the slip when an order is created</b><small>Opens the printer dialog straight away</small></div><label class="sw"><input type="checkbox" id="s5" ${s.autoPrint?'checked':''}><i></i></label></div><div class="field"><label for="s6">Line at the bottom of the slip</label><input class="inp" id="s6" value="${esc(s.footer)}"></div><button class="btn pri" type="submit">Save settings</button></form>
+    <div class="card stack"><h3>Odoo connection</h3><div class="kv"><dt>Address</dt><dd>${esc(s.odooUrl)}</dd><dt>Database</dt><dd>${esc(s.db)}</dd><dt>Company check</dt><dd>${esc(s.company||"not set")}</dd><dt>Posting</dt><dd>Invoice, payment, credit note</dd><dt>Rounding</dt><dd>Whole riyal, .50 up</dd></div>
+    <div class="ftog"><div><b>Test mode: switch Odoo posting off</b><small>Finalized orders then wait in the sync queue until switched on</small></div><label class="sw"><input type="checkbox" id="offtog" ${s.offline?'checked':''}><i></i></label></div>
+    <p class="muted" style="font-size:13px;margin:0">The address is set once for everyone. Each user has their own API key.</p></div></div>`;
+  }
+  return `<div class="tabs">${tabs.map(x=>`<button class="tab ${t===x[0]?'on':''}" data-act="tab" data-grp="admin" data-id="${x[0]}">${x[1]}</button>`).join('')}</div>${b}`;
+}
+function lOT(){
+  const q=(UI.q.otList||'').toLowerCase();
+  return S.customers.filter(c=>!q||c.name.toLowerCase().includes(q)).map(c=>`<div class="li"><div class="grow"><b>${esc(c.name)}</b><small>Holds now: ${held(c.code)}</small></div><input class="inp num" style="width:90px;text-align:right" inputmode="numeric" data-copen="${c.code}" value="${openC(c.code)}" aria-label="Opening trays for ${esc(c.name)}"></div>`).join('')||'<div class="empty">No match.</div>';
+}
+function lAP(){
+  const q=(UI.q.apList||'').toLowerCase();
+  const l=S.products.filter(p=>!q||p.name.toLowerCase().includes(q)||p.code.toLowerCase().includes(q)||p.cat.toLowerCase().includes(q));
+  return `<div class="tbl" style="max-height:560px"><table><thead><tr><th>Code</th><th>Product</th><th>Category</th><th class="r">Pcs</th><th class="r">Default price</th><th>Status</th><th></th></tr></thead><tbody>${l.map(p=>`<tr><td>${p.code}</td><td><b>${esc(p.name)}</b></td><td>${esc(p.cat)}</td><td class="r num">${p.ppp}</td><td class="r num">${nf.format(p.dflt)}</td><td>${p.active?'<span class="pill good">Active</span>':'<span class="pill">Hidden</span>'}</td><td class="r"><button class="btn sm" data-act="prodedit" data-id="${p.code}">Edit</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+function lAC(){
+  const q=(UI.q.acList||'').toLowerCase();
+  return S.customers.filter(c=>!q||c.name.toLowerCase().includes(q)).map(c=>`<button class="li" data-act="admcust" data-id="${c.code}"><div class="grow"><b>${esc(c.name)}</b><small>${c.code} · ${Object.keys(S.custom[c.code]||{}).length} custom prices</small></div>${c.active?'':'<span class="pill">Inactive</span>'}${ic('chev',18)}</button>`).join('')||'<div class="empty">No match.</div>';
+}
+function lAU(){
+  const q=(UI.q.auList||'').toLowerCase();const u=UI.sel.auser||'';
+  const l=S.audit.filter(a=>(!u||a.user===u)&&(!q||(a.action+a.entity+a.ref+a.detail+a.user).toLowerCase().includes(q))).slice(0,200);
+  if(!l.length)return '<div class="card empty">No entries match.</div>';
+  return `<div class="tbl" style="max-height:620px"><table><thead><tr><th>When</th><th>User</th><th>Action</th><th>Reference</th><th>Details</th></tr></thead><tbody>${l.map(a=>`<tr><td style="white-space:nowrap">${fmtDT(a.t)}</td><td>${esc(a.user)}</td><td><b>${esc(a.action)}</b></td><td>${esc(a.ref)}</td><td class="muted">${esc(a.detail)}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+/* ---------- modals ---------- */
+function vModal(){
+  const m=UI.modal;if(!m)return '';
+  const wrap=(c,cls='')=>`<div class="mask ${cls}" data-act="${m.lock?'':'closemodal'}" data-bg="1"><div class="modal ${m.wide?'wide':''}" role="dialog" aria-modal="true">${c}</div></div>`;
+  if(m.type==='fin'){
+    const o=S.orders.find(x=>x.id===m.id);const T=totals(o.lines,o.cust,true);const v=m.tout||'0';
+    return wrap(`<h2>Finalize ${o.id}</h2><div class="row sp" style="margin-bottom:8px"><b>${esc(cust(o.cust).name)}</b><span class="muted">${esc(o.branch)}</span></div>
+    <div class="card" style="box-shadow:none;padding:10px 14px;max-height:170px;overflow:auto">${o.lines.map(l=>`<div class="row sp" style="font-size:14px"><span>${esc(prod(l.code).name)} × ${l.qty}</span><span class="num">${nf.format(l.price*l.qty)}</span></div>`).join('')}</div>
+    <div class="tot"><div><span class="muted">Subtotal</span><span class="num">${sar(T.sub)}</span></div><div><span class="muted">Rounding</span><span class="num">${T.diff>=0?'+':''}${nf.format(T.diff/100)}</span></div><div class="grand"><span>Invoice total</span><span class="num">${sar0(T.rounded)}</span></div></div>
+    <h3 style="margin:16px 0 8px">How many trays did the customer take with them?</h3><div class="hint" style="margin-bottom:10px">${esc(o.branch)} has ${bstock(o.branch)} trays in stock.</div><div class="row" style="align-items:flex-start;gap:16px"><div class="stack" style="flex:1;min-width:220px"><div class="kdisp num" style="font-size:48px;padding:10px">${esc(v)}</div><div class="row">${[0,5,10,20,30].map(n=>`<button class="chip" data-act="mset" data-id="${n}">${n}</button>`).join('')}</div></div>
+    <div class="keypad" style="flex:1;min-width:220px;gap:8px">${[1,2,3,4,5,6,7,8,9].map(n=>`<button style="height:54px;font-size:21px" data-act="mkey" data-id="${n}">${n}</button>`).join('')}<button style="height:54px;font-size:21px" data-act="mkey" data-id="C">C</button><button style="height:54px;font-size:21px" data-act="mkey" data-id="0">0</button><button style="height:54px;font-size:21px" data-act="mkey" data-id="B">⌫</button></div></div>
+    <div class="row" style="margin-top:16px"><button class="btn" data-act="closemodal">Back</button><button class="btn pri" style="flex:1" data-act="dofin">${ic('check',18)} Finalize and post invoice</button></div>`);
+  }
+  if(m.type==='day'){
+    const fmt=UI.dayFmt||'a4';
+    return wrap(`<h2>Combined statement</h2><div class="chips" style="margin:6px 0 10px"><button class="chip ${fmt==='a4'?'on':''}" data-act="dayfmt" data-id="a4">A4 page</button><button class="chip ${fmt==='slip'?'on':''}" data-act="dayfmt" data-id="slip">80 mm slip</button></div><div class="dsview">${m.ccs.map(cc=>dayHtml(dayData(cc,m.key),fmt)).join('<hr>')}</div><div class="row" style="margin-top:14px"><button class="btn" data-act="closemodal">Close</button><button class="btn pri" style="flex:1" data-act="dayprintm">${ic('receipt',18)} Print</button></div>`,'').replace('class="modal "','class="modal wide"');
+  }
+  if(m.type==='receipt'){
+    const o=S.orders.find(x=>x.id===m.id);
+    return wrap(`<h2>${m.title||'Order slip'}</h2><p class="muted" style="margin:0 0 10px">${m.title==='Order created'?`${o.id} is waiting to be finalized. Finalize within ${S.set.finalizeMin} minutes and before midnight.`:'80 mm thermal slip preview.'}</p><div class="rcwrap">${receiptHtml(o)}</div><div class="row" style="margin-top:14px"><button class="btn" data-act="closemodal">Close</button><button class="btn pri" style="flex:1" data-act="print" data-id="${o.id}">${ic('receipt',18)} Print slip</button></div>`);
+  }
+  if(m.type==='progress'){
+    const L=m.offline?['Odoo is not reachable. Saving to the queue']:['Create the invoice in Odoo','Apply whole-riyal rounding','Post the invoice','Record the tray movement'];
+    return wrap(`<h2>Posting to Odoo</h2><div class="progress">${L.map((l,i)=>`<div class="${m.step>i+1?'done':m.step===i+1?'act':''}">${m.step>i?ic('check',16):'<span class="spin"></span>'}${l}</div>`).join('')}</div>`).replace('data-act="closemodal"','');
+  }
+  if(m.type==='done'){
+    const o=S.orders.find(x=>x.id===m.orderId);
+    return wrap(`<div class="stack" style="text-align:center;align-items:center"><div class="av" style="width:56px;height:56px;background:var(--good-soft);color:var(--good)">${ic('check',30)}</div><h2 style="margin:0">${o.odoo.state==='posted'?'Invoice posted':o.odoo.state==='failed'?'Odoo refused the invoice':'Saved, waiting for Odoo'}</h2><p class="muted" style="margin:0">${o.odoo.state==='posted'?`<b>${o.inv}</b> for ${esc(cust(o.cust).name)}, total ${sar(o.total)}.`:(o.odoo.state==='failed'?`${esc(o.odoo.msg)} Fix it, then press Retry in the Odoo sync screen.`:`${o.id} is finalized here. It will post to Odoo as soon as Odoo answers.`)}</p><p class="muted" style="margin:0">Trays: ${o.traysIn} brought, ${o.traysOut} taken. Customer now holds ${held(o.cust)}.</p><div class="row"><button class="btn" data-act="print" data-id="${o.id}">${ic('receipt',18)} Print invoice slip</button><button class="btn pri" data-act="closemodal">Done</button></div></div>`);
+  }
+  if(m.type==='cancel'){
+    return wrap(`<h2>Cancel ${m.id}?</h2><p class="muted">The order will not be sent to Odoo. Trays the customer brought are put back.</p><div class="field"><label for="crs">Reason (required)</label><input class="inp" id="crs" autocomplete="off"></div><div class="row" style="margin-top:16px"><button class="btn" data-act="closemodal">Keep order</button><button class="btn bad" data-act="docancel">Cancel order</button></div>`);
+  }
+  if(m.type==='payrev'){
+    return wrap(`<h2>Reverse ${m.id}?</h2><p class="muted">The payment is cancelled in Odoo (never deleted) and the customer's balance goes back up.</p><div class="field"><label for="prs">Reason (required)</label><input class="inp" id="prs" autocomplete="off"></div><div class="row" style="margin-top:12px"><button class="btn" data-act="closemodal">Keep payment</button><button class="btn pri" style="flex:1" data-act="dopayrev">Reverse payment</button></div>`);
+  }
+  if(m.type==='orddet'){
+    const o=S.orders.find(x=>x.id===m.id);const T=totals(o.lines,o.cust,true);
+    return wrap(`<h2>${o.id}</h2><dl class="kv"><dt>Customer</dt><dd>${esc(cust(o.cust).name)}</dd><dt>Branch</dt><dd>${esc(o.branch)}</dd><dt>Created</dt><dd>${fmtDT(o.createdAt)} by ${esc(o.by)}</dd><dt>Status</dt><dd>${o.status}</dd><dt>Invoice</dt><dd>${o.inv||'—'}</dd><dt>Trays</dt><dd>${o.traysIn} in${o.traysOut!=null?' · '+o.traysOut+' out':''}</dd></dl>
+    <div class="tbl" style="margin:14px 0"><table style="min-width:0"><thead><tr><th>Item</th><th class="r">Qty</th><th class="r">Price</th><th class="r">Amount</th></tr></thead><tbody>${o.lines.map(l=>`<tr><td>${esc(prod(l.code).name)}</td><td class="r num">${l.qty}</td><td class="r num">${nf.format(l.price)}</td><td class="r num">${nf.format(l.price*l.qty)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="tot"><div><span class="muted">Subtotal</span><span class="num">${sar(T.sub)}</span></div><div><span class="muted">Rounding</span><span class="num">${T.diff>=0?'+':''}${nf.format(T.diff/100)}</span></div><div class="grand"><span>Total</span><span class="num">${sar0(T.rounded)}</span></div></div><div class="row" style="margin-top:16px"><button class="btn" data-act="closemodal">Close</button><button class="btn pri" data-act="print" data-id="${o.id}">${ic('receipt',18)} Print slip</button></div>`);
+  }
+  if(m.type==='user'){
+    const u=m.id?uById(m.id):{name:'',email:'',pw:'',active:true,admin:false,feat:['order_create','order_finalize','order_view','payments','customers_view'],key:''};
+    return wrap(`<h2>${m.id?'Edit user':'Add user'}</h2><form class="stack" id="uf"><div class="field"><label for="un">Name</label><input class="inp" id="un" value="${esc(u.name)}" autocomplete="off"></div>
+    <div class="field"><label for="ue">Odoo login email</label><input class="inp" id="ue" type="email" value="${esc(u.email)}" autocomplete="off"><small class="muted">Must be the same user in Odoo.</small></div>
+    <div class="field"><label for="uk">Odoo API key</label><input class="inp" id="uk" type="password" placeholder="${u.key?'Saved. Leave empty to keep it':'Paste the key'}" autocomplete="new-password"><small class="muted">Stored encrypted on the server. Never shown again.</small></div>
+    <div class="field"><label for="up">App password</label><input class="inp" id="up" type="password" placeholder="${m.id?'Leave empty to keep it':'At least 6 characters'}" autocomplete="new-password"></div>
+    <div class="ftog"><div><b>Account active</b></div><label class="sw"><input type="checkbox" id="ua" ${u.active?'checked':''}><i></i></label></div>
+    <div class="ftog"><div><b>Administrator</b><small>Full access and the admin console</small></div><label class="sw"><input type="checkbox" id="uadm" ${u.admin?'checked':''}><i></i></label></div>
+    <h3 style="margin-top:6px">What this person can do</h3>${FEATURES.map(f=>`<div class="ftog"><div><b>${f[1]}</b><small>${f[2]}</small></div><label class="sw"><input type="checkbox" data-feat="${f[0]}" ${u.feat.includes(f[0])||u.admin?'checked':''}><i></i></label></div>`).join('')}
+    <div class="muted" id="uerr" style="color:var(--bad);font-weight:700"></div><div class="row"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri" type="submit" style="flex:1">Save user</button></div></form>`,'');
+  }
+  if(m.type==='prod'){
+    const p=m.id?prod(m.id):{code:'PRD-'+pad(S.products.length+1,3),name:'',cat:cats()[0][0],ppp:1,dflt:0,active:true};
+    return wrap(`<h2>${m.id?'Edit product':'Add product'}</h2><form class="stack" id="pf"><div class="field"><label for="pcode">Code</label><input class="inp" id="pcode" value="${esc(p.code)}" ${m.id?'readonly':''}></div><div class="field"><label for="pname">Name</label><input class="inp" id="pname" value="${esc(p.name)}" autocomplete="off"></div>
+    <div class="field"><label for="pcat">Category</label><input class="inp" id="pcat" list="catl" value="${esc(p.cat)}" autocomplete="off"><datalist id="catl">${cats().map(c=>`<option value="${esc(c[0])}">`).join('')}</datalist></div>
+    <div class="row"><div class="field" style="flex:1"><label for="pppi">Pieces per packet</label><input class="inp" id="pppi" inputmode="numeric" value="${p.ppp}"></div><div class="field" style="flex:1"><label for="pdf">Default price (SAR)</label><input class="inp" id="pdf" inputmode="decimal" value="${p.dflt}"></div></div>
+    <div class="ftog"><div><b>Show in orders</b></div><label class="sw"><input type="checkbox" id="pact" ${p.active?'checked':''}><i></i></label></div><p class="muted" style="margin:0;font-size:13px">Customers without a custom price pay the default price. The code must match the product code in Odoo.</p>
+    <div class="muted" id="perr" style="color:var(--bad);font-weight:700"></div><div class="row"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri" type="submit" style="flex:1">Save product</button></div></form>`);
+  }
+  if(m.type==='cust'){
+    return wrap(`<h2>Add customer</h2><form class="stack" id="cf"><div class="field"><label for="cnm">Name (same as the Odoo customer)</label><input class="inp" id="cnm" autocomplete="off"></div><div class="field"><label for="cob">Opening balance owed (SAR)</label><input class="inp" id="cob" inputmode="decimal" value="0"></div><div class="muted" id="cerr" style="color:var(--bad);font-weight:700"></div><div class="row"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri" type="submit" style="flex:1">Add customer</button></div></form>`);
+  }
+  if(m.type==='cart'){
+    return `<div class="mask sheet" data-act="closemodal" data-bg="1"><div class="modal" role="dialog" aria-modal="true"><div class="cart" style="max-height:none;position:static">${cartHtml(UI.draft)}</div></div></div>`;
+  }
+  if(m.type==='more'){
+    const navs=NAV.filter(n=>n[3]()&&!['home','new','pending','payments'].includes(n[0]));
+    return `<div class="mask sheet" data-act="closemodal" data-bg="1"><div class="modal" role="dialog" aria-modal="true"><h2>More</h2><div class="list">${navs.map(n=>`<button class="li" data-act="nav" data-id="${n[0]}">${ic(n[2],22)}<div class="grow"><b>${n[1]}</b></div>${ic('chev',18)}</button>`).join('')}<div class="li" style="align-items:flex-start">${ic('home',22)}<div class="grow"><b>Install on this phone</b><small style="white-space:normal">iPhone: Share, then Add to Home Screen. Android: menu, then Install app. It opens full screen like a native app.</small></div></div></div></div></div>`;
+  }
+  return '';
+}
+function popHtml(){
+  const p=pending();
+  return `<div class="pop" role="dialog" aria-label="Pending orders"><div class="row sp" style="margin-bottom:6px"><b>Waiting to finalize</b><button class="iconbtn" style="width:34px;height:34px" data-act="bell" aria-label="Close">${ic('x',16)}</button></div>${p.length?`<div class="list">${p.map(o=>`<button class="li" data-act="fin" data-id="${o.id}"><div class="grow"><b>${esc(cust(o.cust).name)}</b><small>${o.id} · ${orderTotalTxt(o)}</small></div>${cdSpan(o)}</button>`).join('')}</div>`:'<div class="empty">Nothing pending.</div>'}</div>`;
+}
+/* ---------- combined day statement ---------- */
+const dkey=ts=>{const d=new Date(ts);return d.getFullYear()+'-'+pad(d.getMonth()+1,2)+'-'+pad(d.getDate(),2)};
+const dEnd=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d,23,59,59,999).getTime()};
+function asOf(cc,key,incl){
+  const ok=k=>incl?k<=key:k<key;let v=toC(cust(cc).o0||0);
+  S.orders.forEach(o=>{if(o.cust===cc&&o.status==='final'&&ok(dkey(o.finalizedAt)))v+=o.total});
+  S.payments.forEach(p=>{if(p.cust===cc&&ok(p.date||dkey(p.t)))v-=toC(p.amount)});
+  S.credits.forEach(p=>{if(p.cust===cc&&ok(dkey(p.t)))v-=toC(p.amount)});
+  return v;
+}
+function dayData(cc,key){
+  const inv=S.orders.filter(o=>o.cust===cc&&o.status==='final'&&dkey(o.finalizedAt)===key).sort((a,b)=>a.finalizedAt-b.finalizedAt);
+  const cr=S.credits.filter(p=>p.cust===cc&&dkey(p.t)===key).sort((a,b)=>a.t-b.t);
+  const pay=S.payments.filter(p=>p.cust===cc&&(p.date||dkey(p.t))===key).sort((a,b)=>a.t-b.t);
+  const m={};inv.forEach(o=>o.lines.forEach(l=>{const k=l.code+'|'+l.price;const e=m[k]||(m[k]={code:l.code,price:l.price,qty:0,amt:0});e.qty+=l.qty;e.amt+=toC(l.price)*l.qty}));
+  const lines=Object.values(m).sort((a,b)=>prod(a.code).name.localeCompare(prod(b.code).name));
+  const tr=S.trays.filter(r=>r.cust===cc&&dkey(r.t)===key);
+  const trIn=-tr.filter(r=>r.type==='in'||r.type==='adjust').reduce((a,r)=>a+r.qty,0);
+  const trOut=tr.filter(r=>r.type==='out').reduce((a,r)=>a+r.qty,0);
+  const trHeld=S.trays.filter(r=>r.cust===cc&&r.t<=dEnd(key)).reduce((a,r)=>a+r.qty,0);
+  const branches=[...new Set(inv.map(o=>o.branch))];
+  return {cc,key,inv,cr,pay,lines,trIn,trOut,trHeld,branches,
+    sub:lines.reduce((a,l)=>a+l.amt,0),rnd:inv.reduce((a,o)=>a+o.rounding,0),invTot:inv.reduce((a,o)=>a+o.total,0),
+    crTot:cr.reduce((a,p)=>a+toC(p.amount),0),payTot:pay.reduce((a,p)=>a+toC(p.amount),0),
+    open:asOf(cc,key,false),close:asOf(cc,key,true),pend:S.orders.filter(o=>o.cust===cc&&o.status==='pending'&&dkey(o.createdAt)===key).length};
+}
+const fmtLong=k=>{const [y,m,d]=k.split('-').map(Number);return new Date(y,m-1,d).toLocaleDateString('en-GB',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})};
+const sgn=c=>(c<0?'-':'')+nf.format(Math.abs(c)/100);
+function dayHtml(D,fmt){
+  const c=cust(D.cc);const slip=fmt==='slip';
+  const isToday=dkey(now())!==D.key;
+  return `<div class="dst ${slip?'slip':''}"><div class="hd"><div><h1>EMAN BAKERY</h1><div class="ar">مخابز إيمان جدة للخبز</div>${D.branches.length?`<div>${esc(D.branches.join(' / '))}</div>`:''}</div><div style="text-align:right"><b>Customer</b><div style="font-size:15px;font-weight:700">${esc(c.name)}</div><div>${c.code}</div></div></div>
+  <div class="ttl"><span>COMBINED INVOICE STATEMENT</span><span>${slip?'':'For date: '}${esc(slip?D.key:fmtLong(D.key))}</span></div>
+  <p style="margin:0 0 6px">This is the combined statement of all invoices of <b>${esc(fmtLong(D.key))}</b>. Number of invoices: <b>${D.inv.length}</b>.</p>
+  <h3>Invoices included</h3><table><thead><tr><th>Invoice no.</th><th class="nos">Order</th><th class="nos">Time</th><th class="nos">Branch</th><th class="n">Amount</th></tr></thead><tbody>${D.inv.map(o=>`<tr><td>${esc(o.inv)}</td><td class="nos">${o.id}</td><td class="nos">${fmtT(o.finalizedAt)}</td><td class="nos">${esc(o.branch)}</td><td class="n">${nf.format(o.total/100)}</td></tr>`).join('')||'<tr><td colspan="5">No invoices on this date</td></tr>'}</tbody></table>
+  <h3>Products (all invoices added together)</h3><table><thead><tr><th>Product</th><th class="n">Packets</th><th class="n px">Price</th><th class="n">Amount</th></tr></thead><tbody>${D.lines.map(l=>`<tr><td>${esc(prod(l.code).name)}</td><td class="n">${l.qty}</td><td class="n px">${nf.format(l.price)}</td><td class="n">${nf.format(l.amt/100)}</td></tr>`).join('')}
+  <tr><th>Total</th><th class="n">${D.lines.reduce((a,l)=>a+l.qty,0)}</th><th class="px"></th><th class="n">${nf.format(D.sub/100)}</th></tr></tbody></table>
+  ${D.cr.length?`<h3>Credit notes of the day</h3><table><thead><tr><th>Credit note</th><th>Reason</th><th class="n">Amount</th></tr></thead><tbody>${D.cr.map(p=>`<tr><td>${p.id}</td><td>${esc(p.reason)}</td><td class="n">-${nf.format(toC(p.amount)/100)}</td></tr>`).join('')}</tbody></table>`:''}
+  <div class="box"><div class="r"><span>Balance at the start of ${esc(D.key)}</span><span>${sgn(D.open)}</span></div>
+  <div class="r"><span>Invoices (${D.inv.length}), rounded to whole riyal</span><span>+ ${nf.format(D.invTot/100)}</span></div>
+  ${D.crTot?`<div class="r"><span>Credit notes</span><span>- ${nf.format(D.crTot/100)}</span></div>`:''}
+  <div class="r gt"><span>TOTAL RECEIVABLE after these invoices and credit notes (SAR)</span><span>${sgn(D.open+D.invTot-D.crTot)}</span></div></div>
+  <div class="note">${D.open+D.invTot-D.crTot<0?'A minus balance means the customer has credit with us. ':''}Payments received on this day are not listed here. Sales are shown without VAT.</div>
+  <h3>Trays on ${esc(D.key)}</h3><div>Brought in: <b>${D.trIn}</b> &nbsp; Taken out: <b>${D.trOut}</b> &nbsp; Held by the customer at the end of the day: <b>${D.trHeld}</b></div>
+  <div class="note">Printed ${esc(fmtDT(now()))} by ${esc(me().name)}</div></div>`;
+}
+function printDay(ccs,key,fmt){
+  $('#printarea').innerHTML=ccs.map((cc,i)=>`<div class="${i<ccs.length-1?'pgbrk':''}">${dayHtml(dayData(cc,key),fmt)}</div>`).join('');
+  setPage(fmt==='slip'?'@page{size:80mm auto;margin:0}':'@page{size:A4;margin:12mm}');
+  audit('Day statement printed','Statement',key,ccs.map(cc=>cust(cc).name).join(', ')+' · '+fmt);
+  try{window.print()}catch(e){toast('Printing is not available in this preview')}
+}
+function dayCustomers(key){
+  const set=new Set();
+  S.orders.forEach(o=>{if(o.status==='final'&&dkey(o.finalizedAt)===key)set.add(o.cust)});
+  S.credits.forEach(p=>{if(dkey(p.t)===key)set.add(p.cust)});
+  return [...set].map(cc=>[cc,dayData(cc,key)]).sort((a,b)=>cust(a[0]).name.localeCompare(cust(b[0]).name));
+}
+function vDaily(){
+  const key=UI.dayKey||dkey(now());const L=dayCustomers(key);const fmt=UI.dayFmt||'a4';
+  const pendAll=S.orders.filter(o=>o.status==='pending'&&dkey(o.createdAt)===key).length;
+  return `<div class="card stack" style="margin-bottom:16px"><div class="row" style="align-items:flex-end;gap:14px"><div class="field"><label for="dd">Date</label><input class="inp" id="dd" type="date" value="${key}"></div>
+  <div class="field"><label>Paper</label><div class="chips"><button class="chip ${fmt==='a4'?'on':''}" data-act="dayfmt" data-id="a4">A4 page</button><button class="chip ${fmt==='slip'?'on':''}" data-act="dayfmt" data-id="slip">80 mm slip</button></div></div>
+  <button class="btn pri" data-act="dayprintall" ${L.length?'':'disabled'}>${ic('receipt',18)} Print all ${L.length} customer${L.length===1?'':'s'}</button></div>
+  <p class="muted" style="margin:0;font-size:13.5px">Each statement adds up all finalized invoices of the chosen date for one customer, with credit notes. It lists invoices and credit notes only (no payments) and shows the receivable after them, even if you print it on a later day.</p>
+  ${pendAll?`<div class="hint" style="background:var(--warn-soft);color:var(--warn)">${pendAll} order${pendAll>1?'s':''} of this date ${pendAll>1?'are':'is'} not finalized yet and ${pendAll>1?'are':'is'} not included.</div>`:''}</div>
+  ${L.length?`<div class="tbl"><table><thead><tr><th>Customer</th><th class="r">Invoices</th><th class="r">Invoice total</th><th class="r">Credit notes</th><th class="r">Receivable after these</th><th></th></tr></thead><tbody>${L.map(([cc,D])=>`<tr><td><b>${esc(cust(cc).name)}</b><br><small class="muted">${D.inv.map(o=>o.inv).join(', ')||'Credit note only'}</small></td><td class="r num">${D.inv.length}</td><td class="r num">${nf.format(D.invTot/100)}</td><td class="r num">${D.crTot?'-'+nf.format(D.crTot/100):'—'}</td><td class="r num"><b>${sgn(D.open+D.invTot-D.crTot)}</b></td><td class="r" style="white-space:nowrap"><button class="btn sm" data-act="dayview" data-id="${cc}">Preview</button> <button class="btn sm pri" data-act="dayprint" data-id="${cc}">${ic('receipt',14)} Print</button></td></tr>`).join('')}</tbody></table></div>`:`<div class="card empty">No finalized invoices or credit notes on ${esc(fmtLong(key))}.</div>`}`;
+}
+/* ---------- receipt (80 mm) ---------- */
+function receiptHtml(o){
+  const c=cust(o.cust);const T=totals(o.lines,o.cust,true);const fin=o.status==='final';
+  const bal=balance(c);
+  const title=o.status==='cancelled'?'CANCELLED ORDER':fin?'INVOICE '+(o.inv||''):'ORDER SLIP (not final yet)';
+  const items=o.lines.map(l=>`<div class="it"><div>${esc(prod(l.code).name)}</div><div class="r2"><span>${l.qty} x ${nf.format(l.price)}</span><span>${nf.format(l.price*l.qty)}</span></div></div>`).join('');
+  return `<div class="rcpt"><div class="c big">EMAN BAKERY</div><div class="c ar">مخابز إيمان جدة للخبز</div><div class="c">${esc(o.branch)}</div><div class="hr"></div>
+  <div class="c"><b>${title}</b></div>
+  <div class="r2"><span>Order</span><span>${o.id}</span></div><div class="r2"><span>Date</span><span>${fmtDT(o.createdAt)}</span></div><div class="r2"><span>Served by</span><span>${esc(o.by)}</span></div>
+  <div class="hr"></div><div><b>${esc(c.name)}</b></div><div class="hr"></div>${items}<div class="hr"></div>
+  <div class="r2"><span>Subtotal</span><span>${nf.format(T.sub/100)}</span></div><div class="r2"><span>Rounding</span><span>${T.diff>=0?'+':''}${nf.format(T.diff/100)}</span></div>
+  <div class="r2 tt"><span>TOTAL SAR</span><span>${nf0.format(T.rounded)}</span></div><div class="hr"></div>
+  <div class="r2"><span>Trays brought</span><span>${o.traysIn}</span></div>${o.traysOut!=null?`<div class="r2"><span>Trays taken</span><span>${o.traysOut}</span></div>`:''}<div class="r2"><span>Trays held now</span><span>${held(o.cust)}</span></div>
+  ${o.status==='cancelled'?'':fin?`<div class="r2"><span>Balance</span><span>${nf.format(bal/100)}</span></div>`:`<div class="r2"><span>Balance before</span><span>${nf.format(bal/100)}</span></div><div class="r2"><span>Balance with this order</span><span>${nf.format((bal+T.rounded*100)/100)}</span></div>`}
+  <div class="hr"></div><div class="c">${esc(S.set.footer||'')}</div><div class="c">${fmtDT(now())}</div><div class="c">.</div></div>`;
+}
+function printOrder(id){
+  const o=S.orders.find(x=>x.id===id);if(!o)return;
+  $('#printarea').innerHTML=receiptHtml(o);
+  audit('Slip printed','Order',id,o.status);
+  setPage('@page{size:80mm auto;margin:0}');
+  try{window.print()}catch(e){toast('Printing is not available in this preview')}
+}
+function setPage(css){let s=document.getElementById('pagestyle');if(!s){s=document.createElement('style');s.id='pagestyle';document.head.appendChild(s)}s.textContent=css}
+/* ---------- render ---------- */
+function render(){
+  const app=$('#app');const sc=$('#content');const top=sc?sc.scrollTop:0;const chips=$('#chips');const cl=chips?chips.scrollLeft:0;
+  const af=document.activeElement;const afId=af&&af.id&&af.tagName==='INPUT'?af.id:null;const afSel=afId?[af.selectionStart,af.selectionEnd]:null;
+  if(!S||!S.session){if(!S)S=blank();app.innerHTML=vLanding();$('#layer').innerHTML='';return}
+  if(!NAV.find(n=>n[0]===UI.view&&n[3]()))UI.view='home';
+  if(overdue().length&&UI.view!=='pending'){UI.view='pending'}
+  let inner='';
+  switch(UI.view){case 'home':inner=vHome();break;case 'new':inner=vNew();break;case 'pending':inner=vPending();break;case 'orders':inner=vOrders();break;case 'payments':inner=vPayments();break;case 'credit':inner=vCredit();break;case 'daily':inner=vDaily();break;case 'trays':inner=vTrays();break;case 'customers':inner=vCustomers();break;case 'sync':inner=vSync();break;case 'admin':inner=vAdmin();break}
+  app.innerHTML=shell(inner);
+  let lay=vModal();
+  if(UI.pop)lay+=popHtml();
+  if(UI.toast)lay+=`<div class="toast" role="status">${esc(UI.toast)}</div>`;
+  $('#layer').innerHTML=lay;
+  const c2=$('#content');if(c2)c2.scrollTop=top;const ch2=$('#chips');if(ch2)ch2.scrollLeft=cl;
+  if(afId){const e=document.getElementById(afId);if(e){e.focus();try{e.setSelectionRange(afSel[0],afSel[1])}catch(x){}}}
+}
+function goBack(){
+  const d=UI.draft;
+  if(UI.modal&&UI.modal.type!=='progress'){UI.modal=null;return render()}
+  if(UI.pop){UI.pop=false;return render()}
+  if(UI.view==='new'&&d){if(d.orderId){UI.draft=null;UI.view='pending';return render()}if(d.step>1){d.step--;return render()}}
+  if(UI.view==='customers'&&UI.sel.custView){UI.sel.custView=null;return render()}
+  if(UI.view==='admin'&&UI.tab.admin==='custs'&&UI.sel.admCust){UI.sel.admCust=null;return render()}
+  if(UI.view==='trays'&&(UI.sel.trayCust||UI.sel.trayBr)){UI.sel.trayCust=null;UI.sel.trayBr=null;UI.tab.trays='over';return render()}
+  if(UI.view==='payments'&&UI.pay&&UI.pay.lines.length&&UI.payAdd){UI.payAdd=false;return render()}
+  let v=UI.hist.pop();if(!v||!NAV.find(n=>n[0]===v&&n[3]()))v='home';
+  UI.view=v;render();
+}
+function toast(t){UI.toast=t;render();clearTimeout(toast.t);toast.t=setTimeout(()=>{UI.toast=null;render()},2600)}
+function tick(){
+  if(!S||!S.session)return;
+  let od=false;
+  document.querySelectorAll('[data-dl]').forEach(e=>{const ms=Number(e.dataset.dl)-now();e.textContent=cdText(ms);e.className='cd '+cdClass(ms)});
+  if(overdue().length&&UI.view!=='pending'&&!(UI.modal&&UI.modal.type==='progress')){od=true}
+  if(overdue().length&&!UI._locked){UI._locked=true;od=true}
+  if(!overdue().length&&UI._locked){UI._locked=false;od=true}
+  if(od)render();
+}
+
+/* ---------- events ---------- */
+function setKey(cur,k,max){if(k==='C')return '';if(k==='B')return cur.slice(0,-1);const n=(cur+k).replace(/^0+(?=\d)/,'');return n.length>3?cur:n}
+document.addEventListener('click',e=>{
+  const bg=e.target.closest('[data-bg]');
+  const t=e.target.closest('[data-act]');
+  if(bg&&t===bg&&e.target!==bg)return;
+  if(!t)return;
+  if(bg&&t===bg&&e.target!==bg)return;
+  const a=t.dataset.act,id=t.dataset.id;
+  if(a==='closemodal'){if(t.dataset.bg&&e.target!==t)return;if(UI.modal&&UI.modal.type==='progress')return;UI.modal=null;return render()}
+  if(t.disabled)return;
+  switch(a){
+   case 'gologin':UI.auth='login';render();break;
+   case 'gohome':UI.auth='home';render();break;
+   case 'togpw':{const p=$('#lp');p.type=p.type==='password'?'text':'password';break}
+   case 'back':goBack();break;
+   case 'nav':if(id!==UI.view){UI.hist.push(UI.view);if(UI.hist.length>25)UI.hist.shift()}UI.view=id;UI.more=false;UI.modal=null;UI.pop=false;if(id==='new'&&!UI.draft)startDraft();if(id!=='admin')UI.sel.admCust=null;render();break;
+   case 'more':UI.modal={type:'more'};render();break;
+   case 'theme':{const cur=document.documentElement.dataset.theme;const dark=cur?cur==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.documentElement.dataset.theme=dark?'light':'dark';break}
+   case 'bell':UI.pop=!UI.pop;render();break;
+   case 'logout':api('POST','/api/logout').catch(()=>{}).then(()=>{S=blank();lastSnap='';UI.auth='login';UI.hist=[];UI.pay=null;UI.pop=false;UI.modal=null;UI.draft=null;UI.view='home';render()});break;
+   case 'branch':UI.draft.branch=id;UI.draft.step=2;render();break;
+   case 'step':UI.draft.step=Number(id);render();break;
+   case 'pickcust':UI.draft.cust=id;UI.draft.step=3;UI.draft.tin=UI.draft.tin||'';render();break;
+   case 'tset':if(Number(id)>maxIn()){toast('Customer holds only '+maxIn()+' trays');break}UI.draft.tin=String(id);render();break;
+   case 'key':{const n=setKey(UI.draft.tin||'',id);if(Number(n||0)>maxIn()){toast('Customer holds only '+maxIn()+' trays');break}UI.draft.tin=n;render();break}
+   case 'tnext':if(Number(UI.draft.tin||0)>maxIn()){toast('Customer holds only '+maxIn()+' trays');break}UI.draft.traysIn=Number(UI.draft.tin||0);UI.draft.step=4;render();break;
+   case 'cat':UI.draft.cat=id;UI.draft.pcs=null;UI.draft.catOpen=false;render();break;
+   case 'catopen':UI.draft.catOpen=true;render();break;
+   case 'pcs':UI.draft.pcs=Number(id);render();break;
+   case 'padd':{const l=UI.draft.lines.find(x=>x.code===id);if(l)l.qty++;else UI.draft.lines.push({code:id,qty:1});render();break}
+   case 'pinc':{const l=UI.draft.lines.find(x=>x.code===id);if(l)l.qty++;render();break}
+   case 'pdec':{const i=UI.draft.lines.findIndex(x=>x.code===id);if(i>=0){UI.draft.lines[i].qty--;if(UI.draft.lines[i].qty<=0)UI.draft.lines.splice(i,1)}render();break}
+   case 'clearcart':UI.draft.lines=[];render();break;
+   case 'opencart':UI.modal={type:'cart'};render();break;
+   case 'create':{if(!UI.draft.lines.length)break;const d=UI.draft;act(async()=>{const oid=await newOrder(d);UI.draft=null;UI.view='pending';UI.hist=[];UI.modal={type:'receipt',id:oid,title:'Order created'};render();if(S.set.autoPrint)setTimeout(()=>printOrder(oid),350)});break}
+   case 'savechg':{const d=UI.draft,idd=d.orderId;act(async()=>{await saveOrder(d);UI.draft=null;UI.view='pending';UI.modal={type:'receipt',id:idd,title:'Order updated'};render();if(S.set.autoPrint)setTimeout(()=>printOrder(idd),350)});break}
+   case 'print':printOrder(id);break;
+   case 'dayfmt':UI.dayFmt=id;render();break;
+   case 'dayview':UI.modal={type:'day',ccs:[id],key:UI.dayKey||dkey(now()),wide:true};render();break;
+   case 'dayprint':printDay([id],UI.dayKey||dkey(now()),UI.dayFmt||'a4');break;
+   case 'dayprintall':printDay(dayCustomers(UI.dayKey||dkey(now())).map(x=>x[0]),UI.dayKey||dkey(now()),UI.dayFmt||'a4');break;
+   case 'dayprintm':printDay(UI.modal.ccs,UI.modal.key,UI.dayFmt||'a4');break;
+   case 'canceledit':UI.draft=null;UI.modal=null;UI.view='pending';render();break;
+   case 'editord':editDraft(id);render();break;
+   case 'fin':{const o=S.orders.find(x=>x.id===id);if(!can('order_finalize'))break;UI.pop=false;UI.modal={type:'fin',id,tout:''};render();break}
+   case 'mkey':{const o=S.orders.find(x=>x.id===UI.modal.id);const n=setKey(UI.modal.tout||'',id);if(Number(n||0)>bstock(o.branch)){toast('Only '+bstock(o.branch)+' trays in '+o.branch);break}UI.modal.tout=n;render();break}
+   case 'mset':{const o=S.orders.find(x=>x.id===UI.modal.id);if(Number(id)>bstock(o.branch)){toast('Only '+bstock(o.branch)+' trays in '+o.branch);break}UI.modal.tout=String(id);render();break}
+   case 'dofin':{const idd=UI.modal.id,tout=Number(UI.modal.tout||0);UI.view='pending';finalizeOrder(idd,tout);break}
+   case 'cancelord':UI.modal={type:'cancel',id};render();break;
+   case 'docancel':{const r=($('#crs')||{}).value||'';if(r.trim().length<2){$('#crs').focus();return}const cid=UI.modal.id;UI.modal=null;act(()=>cancelOrder(cid,r.trim()),'Order cancelled');break}
+   case 'payrev':UI.modal={type:'payrev',id};render();break;
+   case 'dopayrev':{const r=($('#prs')||{}).value||'';if(r.trim().length<2){$('#prs').focus();return}const pid=UI.modal.id;UI.modal=null;act(()=>api('POST','/api/payments/'+pid+'/reverse',{reason:r.trim()}),'Payment reversed and cancelled in Odoo');break}
+   case 'orddet':UI.modal={type:'orddet',id,wide:true};render();break;
+   case 'tab':UI.tab[t.dataset.grp]=id;if(t.dataset.grp==='admin')UI.sel.admCust=null;render();break;
+   case 'selcust':UI.sel[t.dataset.grp]=id;render();break;
+   case 'clrcust':UI.sel[id]=null;render();break;
+   case 'method':UI.sel.method=id;render();break;
+   case 'payadd':{const P=payState();const left=payCalc().left;P.lines.push({cc:id,amt:left>0?(left/100).toFixed(2):''});UI.payAdd=false;UI.q.payList='';render();break}
+   case 'payaddopen':UI.payAdd=true;render();break;
+   case 'payrm':{const P=payState();P.lines=P.lines.filter(l=>l.cc!==id);render();break}
+   case 'payfill':{const P=payState();const l=P.lines.find(x=>x.cc===id);const others=P.lines.filter(x=>x!==l).reduce((a,x)=>a+pc(x.amt),0);const r=payCalc().tot-others;l.amt=r>0?(r/100).toFixed(2):'';render();break}
+   case 'reason':UI.sel.reason=id;snapForm();render();restoreForm();break;
+   case 'traycust':UI.sel.trayCust=id;UI.tab.trays='moves';render();break;
+   case 'viewcust':UI.sel.custView=id;UI.q.prList='';render();break;
+   case 'custback':UI.sel.custView=null;render();break;
+   case 'admcust':UI.sel.admCust=id;UI.q.prList='';render();break;
+   case 'admcustback':UI.sel.admCust=null;render();break;
+   case 'retry':act(()=>retryQueue(false),queueMsg);break;
+   case 'retryfailed':act(()=>retryQueue(true),queueMsg);break;
+   case 'odootest':act(async()=>{const r=await api('POST','/api/admin/odoo/test');UI.sel.adminMsg=(r.ok?'Connected. ':'STOP: ')+'Odoo company: '+r.companies.join(', ')+(r.expected?(r.ok?' (as expected)':' - expected '+r.expected):'');return r});break;
+   case 'odoobal':{if(!confirm('Load every customer\'s current Odoo balance as the starting balance?'))break;act(async()=>{const r=await api('POST','/api/admin/odoo/balances',{});UI.sel.adminMsg='Loaded '+r.matched+' customers, total SAR '+nf.format(r.total)+'.'+(r.unmatchedOdoo.length?' In Odoo but not in the app: '+r.unmatchedOdoo.map(x=>x.name+' '+nf.format(x.balance)).join(', ')+'.':'')+(r.appCustomersWithoutOdooBalance.length?' In the app without Odoo balance (set to 0): '+r.appCustomersWithoutOdooBalance.join(', ')+'.':'');return r});break}
+   case 'odonum':act(async()=>{const r=await api('POST','/api/admin/odoo/numbers');UI.sel.adminMsg='Next numbers: order '+r.ord.next+' (Odoo last '+r.ord.last+'), payment '+r.pay.next+' (last '+r.pay.last+'), credit note '+r.cn.next+' (last '+r.cn.last+').';return r});break;
+   case 'usernew':UI.modal={type:'user',id:null};render();break;
+   case 'useredit':UI.modal={type:'user',id:Number(id)};render();break;
+   case 'prodnew':UI.modal={type:'prod',id:null};render();break;
+   case 'prodedit':UI.modal={type:'prod',id};render();break;
+   case 'custnew':UI.modal={type:'cust'};render();break;
+  }
+});
+let formSnap={};
+function snapForm(){formSnap={};['ca','cnn'].forEach(i=>{const e=document.getElementById(i);if(e)formSnap[i]=e.value})}
+function restoreForm(){Object.keys(formSnap).forEach(i=>{const e=document.getElementById(i);if(e)e.value=formSnap[i]})}
+async function login(email,pw){
+  const e=$('#lerr');if(e)e.textContent='';
+  try{await api('POST','/api/login',{email,password:pw});await refresh();UI.view='home';render()}
+  catch(x){const el=$('#lerr');if(el)el.textContent=x.message}
+}
+document.addEventListener('submit',e=>{
+  e.preventDefault();const f=e.target;
+  if(f.id==='lf'){login($('#le').value,$('#lp').value)}
+  else if(f.id==='payf'){
+    if(!payOk()){toast('The amounts must add up to the total received');return}
+    const P=payState();const c=payCalc();
+    act(async()=>{const r=await api('POST','/api/payments',{method:UI.sel.method||'Cash',date:P.date,note:P.note,total:c.tot/100,lines:P.lines.map(l=>({cc:l.cc,amount:pc(l.amt)/100}))});UI.pay=null;UI.payAdd=false;UI.q.payList='';return r},
+      r=>{const ok=r.states.every(x=>x.odoo_state==='posted');return r.ids.length+' payment'+(r.ids.length>1?'s':'')+(ok?' posted to Odoo':' saved, waiting for Odoo')+', total '+sar(c.tot)});
+  } else if(f.id==='cnf'){
+    const amt=parseFloat($('#ca').value);if(!UI.sel.cn||!(amt>0)){toast('Pick a customer and enter an amount');return}
+    const cn=UI.sel.cn,note=$('#cnn').value;act(async()=>{const r=await api('POST','/api/credits',{cust:cn,amount:amt,reason:UI.sel.reason||'Discount',note});UI.sel.cn=null;return r},r=>r.id+(r.odoo==='posted'?' posted as a credit note':' saved, waiting for Odoo'));
+  } else if(f.id==='bof'){
+    act(async()=>{for(let i=0;i<S.set.branches.length;i++){const br=S.set.branches[i];const v=Math.max(0,parseInt(document.getElementById('bo'+i).value,10)||0);if(v!==openB(br))await api('POST','/api/admin/trays/branch',{branch:br,qty:v})}},'Branch stock saved');
+  } else if(f.id==='uf'){saveUser()}
+  else if(f.id==='pf'){saveProd()}
+  else if(f.id==='cf'){
+    const n=$('#cnm').value.trim();if(n.length<2){$('#cerr').textContent='Enter the customer name.';return}
+    const ob=parseFloat($('#cob').value)||0;
+    act(async()=>{const r=await api('POST','/api/admin/customers',{name:n,opening:ob});UI.modal=null;return r},r=>'Customer '+r.code+' added. Create the same customer in Odoo too.');
+  } else if(f.id==='setf'){
+    act(()=>api('PUT','/api/admin/settings',{finalizeMin:parseInt($('#s1').value,10)||60,autoPrint:$('#s5').checked,footer:$('#s6').value.trim()}),'Settings saved');
+  }
+});
+async function saveUser(){
+  const m=UI.modal;const name=$('#un').value.trim(),email=$('#ue').value.trim().toLowerCase(),key=$('#uk').value,pw=$('#up').value;
+  const err=x=>{$('#uerr').textContent=x};
+  if(name.length<2)return err('Enter a name.');if(!/^\S+@\S+\.\S+$/.test(email))return err('Enter the Odoo login email.');
+  if(!m.id&&(pw.length<8))return err('Password needs at least 8 characters.');
+  if(pw&&pw.length<8)return err('Password needs at least 8 characters.');
+  if(!m.id&&!key)return err('Paste the Odoo API key for this user.');
+  const feat=[...document.querySelectorAll('[data-feat]')].filter(x=>x.checked).map(x=>x.dataset.feat);
+  const adm=$('#uadm').checked,act0=$('#ua').checked;
+  const body={name,email,admin:adm,active:act0,feat,key:key||undefined,password:pw||undefined};
+  const ok=await act(()=>m.id?api('PUT','/api/admin/users/'+m.id,body):api('POST','/api/admin/users',body),'User saved');
+  if(ok){UI.modal=null;render()}
+}
+async function saveProd(){
+  const m=UI.modal;const err=x=>{$('#perr').textContent=x};
+  const code=$('#pcode').value.trim().toUpperCase(),name=$('#pname').value.trim().toUpperCase(),cat=$('#pcat').value.trim().toUpperCase(),ppp=parseInt($('#pppi').value,10),df=parseFloat($('#pdf').value),act0=$('#pact').checked;
+  if(!code||name.length<2||!cat)return err('Fill in code, name and category.');if(!(ppp>0)||!(df>=0))return err('Pieces and price must be numbers.');
+  if(!m.id&&S.products.some(p=>p.code===code))return err('This code exists already.');
+  const ok=await act(()=>api('POST','/api/admin/products',{code,name,cat,ppp,dflt:df,active:act0}),'Product saved. Make sure the same code exists in Odoo.');
+  if(ok){UI.modal=null;render()}
+}
+document.addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='pa'){payState().total=t.value;updPay();return}
+  if(t.id==='pd'){payState().date=t.value;return}
+  if(t.id==='pn'){payState().note=t.value;return}
+  if(t.dataset.pl){const l=payState().lines.find(x=>x.cc===t.dataset.pl);if(l)l.amt=t.value;updPay();return}
+  if(t.dataset.list){const k=t.dataset.list;UI.q[k]=t.value;const L={custList:lCust,cvList:lCV,ordList:lOrders,apList:lAP,acList:lAC,otList:lOT,auList:lAU,payList:lPayPick,cnList:()=>lPick('cn'),adjList:()=>lPick('adj'),prList:()=>lPrices(UI.sel.admCust&&UI.tab.admin==='custs'&&UI.view==='admin'?UI.sel.admCust:UI.sel.custView,UI.view==='admin')};const el=document.getElementById(k);if(el&&L[k])el.innerHTML=L[k]()}
+});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.qty){const v=parseInt(t.value,10)||0;const i=UI.draft.lines.findIndex(l=>l.code===t.dataset.qty);if(v<=0){if(i>=0)UI.draft.lines.splice(i,1)}else if(i>=0)UI.draft.lines[i].qty=v;else UI.draft.lines.push({code:t.dataset.qty,qty:v});render()}
+  else if(t.dataset.price){
+    const cc=t.dataset.cust,pcd=t.dataset.price;const raw=t.value.trim();
+    if(raw!==''&&!(parseFloat(raw)>=0)){toast('Enter a valid price');return}
+    act(()=>api('PUT','/api/admin/price',{cust:cc,prod:pcd,price:raw===''?null:parseFloat(raw)}),'Price saved and logged').then(()=>{const el=document.getElementById('prList');if(el)el.innerHTML=lPrices(cc,true)});
+  }
+  else if(t.id==='trayf'){UI.sel.trayCust=t.value||null;render()}
+  else if(t.id==='dd'){UI.dayKey=t.value||dkey(now());render()}
+  else if(t.id==='trayb'){UI.sel.trayBr=t.value||null;render()}
+  else if(t.dataset.copen){
+    const cc=t.dataset.copen;const v=Math.max(0,parseInt(t.value,10)||0);
+    if(v!==openC(cc))act(()=>api('POST','/api/admin/trays/customer',{cust:cc,qty:v}),cust(cc).name+': opening '+v+' trays saved');
+  }
+  else if(t.id==='auser'){UI.sel.auser=t.value;render()}
+  else if(t.id==='offtog'){act(()=>api('PUT','/api/admin/offline',{offline:t.checked}))}
+  else if(t.id==='impf'){const f=t.files&&t.files[0];if(!f)return;f.text().then(txt=>{let j;try{j=JSON.parse(txt)}catch(x){return toast('This file is not the starting-data file')}act(()=>api('POST','/api/admin/import',j),r=>'Loaded '+r.products+' products, '+r.customers+' customers ('+r.newCustomers+' new), '+r.prices+' customer prices')})}
+});
+try{history.pushState({g:1},'')}catch(x){}
+window.addEventListener('popstate',()=>{if(S&&S.session)goBack();try{history.pushState({g:1},'')}catch(x){}});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===' '){const t=e.target.closest&&e.target.closest('.pt');if(t&&e.target===t){e.preventDefault();t.click()}}
+  if(e.key==='Escape'&&UI.modal&&UI.modal.type!=='progress'){UI.modal=null;render()}
+});
+
+/* ---------- boot ---------- */
+(async function(){
+  try{PUB=await (await fetch('/api/public')).json()}catch(x){}
+  try{await refresh()}catch(x){S=blank()}
+  if(!S)S=blank();
+  render();setInterval(tick,1000);
+  const poll=()=>{if(S&&S.session&&!UI.busy&&!(UI.modal&&UI.modal.type==='progress')&&document.visibilityState==='visible')refresh(true).then(ch=>{if(ch)render()}).catch(()=>{})};
+  setInterval(poll,15000);
+  document.addEventListener('visibilitychange',poll);
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+})();
+})();
+</script>
+</body>
+</html>
